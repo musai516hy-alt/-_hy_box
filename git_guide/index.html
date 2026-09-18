@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>손혜영 구역장님을 위한 쉽고 명쾌한 Git 마스터 가이드</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: radial-gradient(circle at 15% 15%, #1e1b4b 0%, #0f172a 50%, #030712 100%);
+      --bg-card: rgba(30, 41, 59, 0.7);
+      --bg-card-hover: rgba(51, 65, 85, 0.85);
+      --border-color: rgba(255, 255, 255, 0.12);
+      --border-glow: rgba(99, 102, 241, 0.4);
+      --primary: #6366f1;
+      --primary-light: #818cf8;
+      --primary-glow: rgba(99, 102, 241, 0.35);
+      --secondary: #ec4899;
+      --accent-cyan: #06b6d4;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --terminal-bg: #090d16;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --radius-sm: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Pretendard', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      line-height: 1.65;
+      overflow-x: hidden;
+      padding-bottom: 80px;
+    }
+
+    /* Ambient Background Glow */
+    .ambient-glow {
+      position: fixed;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 750px;
+      height: 380px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.25) 0%, rgba(236, 72, 153, 0.15) 50%, transparent 80%);
+      filter: blur(80px);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header & Hero */
+    header {
+      text-align: center;
+      padding: 60px 0 40px;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid var(--border-glow);
+      border-radius: 9999px;
+      color: var(--primary-light);
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      backdrop-filter: blur(8px);
+    }
+
+    h1 {
+      font-size: 2.8rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #ffffff 30%, #c7d2fe 70%, #f472b6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      max-width: 680px;
+      margin: 0 auto 32px;
+      word-break: keep-all;
+    }
+
+    .nav-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 48px;
+    }
+
+    .nav-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 10px 20px;
+      border-radius: var(--radius-md);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      backdrop-filter: blur(10px);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .nav-btn:hover, .nav-btn.active {
+      background: var(--primary);
+      border-color: var(--primary-light);
+      box-shadow: 0 0 20px var(--primary-glow);
+      transform: translateY(-2px);
+    }
+
+    /* Cards & Grids */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+      margin-bottom: 32px;
+      transition: border-color 0.3s ease;
+    }
+
+    .card:hover {
+      border-color: var(--border-glow);
+    }
+
+    .card-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-desc {
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      font-size: 1.05rem;
+      word-break: keep-all;
+    }
+
+    /* Interactive Simulator Section */
+    .simulator-container {
+      background: #0b0f19;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-top: 16px;
+    }
+
+    .flow-stages {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .flow-box {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      text-align: center;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .flow-box.highlight {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 16px rgba(6, 182, 212, 0.4);
+      background: rgba(6, 182, 212, 0.1);
+    }
+
+    .flow-box-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    .flow-box-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 10px;
+    }
+
+    .file-chip {
+      display: inline-block;
+      padding: 6px 12px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px dashed var(--border-color);
+      border-radius: var(--radius-sm);
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      color: var(--text-main);
+      transition: all 0.3s;
+    }
+
+    .file-chip.modified {
+      background: rgba(245, 158, 11, 0.2);
+      border-color: var(--accent-amber);
+      color: var(--accent-amber);
+    }
+
+    .file-chip.staged {
+      background: rgba(6, 182, 212, 0.2);
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    .file-chip.committed {
+      background: rgba(99, 102, 241, 0.2);
+      border-color: var(--primary-light);
+      color: var(--primary-light);
+    }
+
+    .file-chip.pushed {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: var(--accent-green);
+      color: var(--accent-green);
+    }
+
+    .sim-controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .sim-btn {
+      padding: 10px 18px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      background: rgba(30, 41, 59, 0.9);
+      color: var(--text-main);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Fira Code', monospace;
+    }
+
+    .sim-btn:hover {
+      background: var(--primary);
+      border-color: var(--primary-light);
+      transform: translateY(-2px);
+    }
+
+    .sim-terminal {
+      background: var(--terminal-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+      color: #a7f3d0;
+      min-height: 80px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+
+    /* Concept Cards Grid */
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    .concept-item {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      transition: transform 0.25s, border-color 0.25s;
+    }
+
+    .concept-item:hover {
+      transform: translateY(-4px);
+      border-color: var(--border-glow);
+      background: rgba(30, 41, 59, 0.6);
+    }
+
+    .concept-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .concept-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid var(--border-glow);
+    }
+
+    .concept-item h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .concept-analogy {
+      background: rgba(99, 102, 241, 0.1);
+      border-left: 3px solid var(--primary-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 0.9rem;
+      color: #c7d2fe;
+      margin-bottom: 12px;
+      word-break: keep-all;
+    }
+
+    /* Workflow Steps */
+    .step-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .step-card {
+      display: grid;
+      grid-template-columns: 50px 1fr;
+      gap: 20px;
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      align-items: start;
+    }
+
+    .step-num {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.2rem;
+      color: #fff;
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    .step-content h4 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #fff;
+    }
+
+    .step-content p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+    }
+
+    .code-box {
+      background: var(--terminal-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #e2e8f0;
+    }
+
+    .copy-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .copy-btn:hover {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    /* FAQ & Emergency Cheatsheet */
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.95rem;
+    }
+
+    th, td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    th {
+      color: var(--primary-light);
+      font-weight: 700;
+      background: rgba(15, 23, 42, 0.6);
+    }
+
+    td code {
+      font-family: 'Fira Code', monospace;
+      background: rgba(99, 102, 241, 0.15);
+      color: #c7d2fe;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: #10b981;
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+      display: none;
+      z-index: 9999;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+      h1 { font-size: 2.1rem; }
+      .flow-stages { grid-template-columns: 1fr; }
+      .step-card { grid-template-columns: 1fr; }
+      .step-num { margin-bottom: 8px; }
+      .card { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient-glow"></div>
+  <div id="toast" class="toast">클립보드에 복사되었습니다!</div>
+
+  <div class="container">
+    <header>
+      <div class="badge-pill">
+        <span>✨</span> 비전공자도 10분 만에 이해하는 실전 가이드
+      </div>
+      <h1>손혜영 구역장님을 위한 Git 마스터 가이드</h1>
+      <p class="subtitle">
+        소중한 목양 수첩 코드와 데이터를 과거 시점으로 언제든 되돌리고, 안전하게 보관하는 타임머신 Git을 가장 알기 쉽게 안내해 드립니다.
+      </p>
+
+      <nav class="nav-tabs">
+        <a href="#simulator" class="nav-btn active">🎮 인터랙티브 체험관</a>
+        <a href="#concepts" class="nav-btn">💡 비유로 배우는 핵심 개념</a>
+        <a href="#workflow" class="nav-btn">🚀 5분 실전 루틴</a>
+        <a href="#emergency" class="nav-btn">🚨 긴급 복구 치트시트</a>
+      </nav>
+    </header>
+
+    <!-- SECTION 1: INTERACTIVE SIMULATOR -->
+    <section id="simulator" class="card">
+      <div class="card-title">
+        <span>🎮</span> Git의 4단계 작동 원리 직접 체험하기
+      </div>
+      <p class="card-desc">
+        아래 버튼을 순서대로 눌러보세요. 내가 작성한 파일이 어떻게 <strong>작업대</strong>에서 <strong>포장 상자(Staging)</strong>를 거쳐 <strong>내 컴퓨터 보관소(Commit)</strong>와 <strong>GitHub 원격 클라우드(Push)</strong>로 이동하는지 한눈에 볼 수 있습니다.
+      </p>
+
+      <div class="simulator-container">
+        <div class="flow-stages">
+          <!-- Stage 1 -->
+          <div class="flow-box" id="box-working">
+            <div class="flow-box-title">1단계</div>
+            <div class="flow-box-name">내 책상 (Working)</div>
+            <div id="file-working" class="file-chip">언약교회4구역.html</div>
+          </div>
+
+          <!-- Stage 2 -->
+          <div class="flow-box" id="box-stage">
+            <div class="flow-box-title">2단계 (git add)</div>
+            <div class="flow-box-name">포장 상자 (Staging)</div>
+            <div id="file-stage" style="color: var(--text-muted); font-size: 0.85rem;">비어 있음</div>
+          </div>
+
+          <!-- Stage 3 -->
+          <div class="flow-box" id="box-commit">
+            <div class="flow-box-title">3단계 (git commit)</div>
+            <div class="flow-box-name">내 금고 (Local Git)</div>
+            <div id="file-commit" style="color: var(--text-muted); font-size: 0.85rem;">기록 없음</div>
+          </div>
+
+          <!-- Stage 4 -->
+          <div class="flow-box" id="box-remote">
+            <div class="flow-box-title">4단계 (git push)</div>
+            <div class="flow-box-name">GitHub 구름 창고</div>
+            <div id="file-remote" style="color: var(--text-muted); font-size: 0.85rem;">동기화 전</div>
+          </div>
+        </div>
+
+        <div class="sim-controls">
+          <button class="sim-btn" onclick="simModify()">1. 코드 수정 (Modify)</button>
+          <button class="sim-btn" onclick="simAdd()">2. git add . (상자에 담기)</button>
+          <button class="sim-btn" onclick="simCommit()">3. git commit (봉인 & 도장)</button>
+          <button class="sim-btn" onclick="simPush()">4. git push (GitHub 전송)</button>
+          <button class="sim-btn" style="background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.4);" onclick="simReset()">처음으로 리셋</button>
+        </div>
+
+        <div class="sim-terminal" id="sim-log">
+$ git status
+현재 모든 파일이 최신 상태입니다. [1. 코드 수정] 버튼을 눌러 작업을 시작해 보세요.
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: CORE CONCEPTS WITH ANALOGIES -->
+    <section id="concepts" class="card">
+      <div class="card-title">
+        <span>💡</span> 일상 속 비유로 완벽히 이해하는 Git 5대 개념
+      </div>
+      <p class="card-desc">어려운 개발 용어를 구역 사역과 일상생활의 친숙한 개념으로 풀어드렸습니다.</p>
+
+      <div class="concept-grid">
+        <div class="concept-item">
+          <div class="concept-header">
+            <div class="concept-icon">📸</div>
+            <h3>Commit (커밋)</h3>
+          </div>
+          <div class="concept-analogy">비유: 게임의 "세이브 포인트" 또는 "사진 스냅샷"</div>
+          <p style="color: var(--text-muted); font-size: 0.95rem;">
+            "오늘 목양 수첩 출석 체크 기능 완성!"처럼 중요한 작업을 마칠 때마다 사진을 찍어두는 것입니다. 언제든 버그가 생기면 그 시점의 과거로 되돌아갈 수 있습니다.
+          </p>
+        </div>
+
+        <div class="concept-item">
+          <div class="concept-header">
+            <div class="concept-icon">📦</div>
+            <h3>Staging Area (스테이징)</h3>
+          </div>
+          <div class="concept-analogy">비유: 택배 상자에 포장할 물건을 담는 과정 (`git add`)</div>
+          <p style="color: var(--text-muted); font-size: 0.95rem;">
+            책상에 파일 10개가 있더라도, 이번에 저장하고 싶은 파일만 골라서 상자에 쏙 담는 과정입니다. 준비된 파일만 깔끔하게 커밋할 수 있습니다.
+          </p>
+        </div>
+
+        <div class="concept-item">
+          <div class="concept-header">
+            <div class="concept-icon">🌿</div>
+            <h3>Branch (브랜치)</h3>
+          </div>
+          <div class="concept-analogy">비유: 원본을 건드리지 않는 "평행 세계 실험실"</div>
+          <p style="color: var(--text-muted); font-size: 0.95rem;">
+            기존의 안전한 목양 수첩을 그대로 둔 채, "새로운 성경 통독 표 기능"을 마음껏 실험해볼 수 있는 복사본 가지(Branch)입니다. 마음에 안 들면 가지째 버리면 그만입니다.
+          </p>
+        </div>
+
+        <div class="concept-item">
+          <div class="concept-header">
+            <div class="concept-icon">☁️</div>
+            <h3>GitHub & Push (깃허브와 푸시)</h3>
+          </div>
+          <div class="concept-analogy">비유: 화재나 분실에도 안전한 "구글 드라이브 원격 금고"</div>
+          <p style="color: var(--text-muted); font-size: 0.95rem;">
+            Git이 내 컴퓨터 안의 기록 장치라면, GitHub는 인터넷 세상에 안전하게 보관해두는 온라인 백업 금고입니다. `git push`로 내 컴퓨터의 기록을 클라우드에 올려둡니다.
+          </p>
+        </div>
+
+        <div class="concept-item">
+          <div class="concept-header">
+            <div class="concept-icon">🛡️</div>
+            <h3>.gitignore (비밀 가림막)</h3>
+          </div>
+          <div class="concept-analogy">비유: 외부에 공개하면 안 되는 비밀 일기장 가리기</div>
+          <p style="color: var(--text-muted); font-size: 0.95rem;">
+            API 키나 비밀번호가 적힌 `.env` 파일처럼 GitHub에 올리면 안 되는 파일들을 Git이 자동으로 감지하여 인터넷에 올라가지 않도록 막아줍니다.
+          </p>
+        </div>
+
+        <div class="concept-item">
+          <div class="concept-header">
+            <div class="concept-icon">🔄</div>
+            <h3>Pull (풀)</h3>
+          </div>
+          <div class="concept-analogy">비유: 최신 내용 다운로드 및 동기화</div>
+          <p style="color: var(--text-muted); font-size: 0.95rem;">
+            다른 컴퓨터나 동역자가 GitHub에 올려둔 최신 작업 내역을 내 컴퓨터로 쏙 가져와 동기화하는 명령어입니다.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: 5-MIN PRACTICAL WORKFLOW -->
+    <section id="workflow" class="card">
+      <div class="card-title">
+        <span>🚀</span> 혜영 님의 컴퓨터에서 바로 써먹는 5분 실전 루틴
+      </div>
+      <p class="card-desc">터미널(PowerShell 또는 VS Code)을 열고 딱 이 순서대로만 진행해 보세요.</p>
+
+      <div class="step-list">
+        <!-- Step 1 -->
+        <div class="step-card">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <h4>[최초 1회만] 내 이름과 이메일 등록하기</h4>
+            <p>Git에게 "내가 이 작업을 기록하는 사람이다"라고 알려주는 과정입니다.</p>
+            <div class="code-box">
+              <span>git config --global user.name "손혜영"</span>
+              <button class="copy-btn" onclick="copyCode('git config --global user.name \"손혜영\"')">복사</button>
+            </div>
+            <div class="code-box" style="margin-top: 8px;">
+              <span>git config --global user.email "내이메일@gmail.com"</span>
+              <button class="copy-btn" onclick="copyCode('git config --global user.email \"내이메일@gmail.com\"')">복사</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step-card">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <h4>[폴더당 1회] 내 프로젝트 폴더에 Git 시작하기</h4>
+            <p>현재 작업 폴더(예: `c:\class\언약교회구역모임`)를 Git 타임머신 관리 대상으로 지정합니다.</p>
+            <div class="code-box">
+              <span>git init</span>
+              <button class="copy-btn" onclick="copyCode('git init')">복사</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step-card">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <h4>[일상 루틴 1] 변경된 파일 상자에 담기</h4>
+            <p>수정한 파일 전체를 커밋 대기 상자(Staging Area)에 올립니다.</p>
+            <div class="code-box">
+              <span>git add .</span>
+              <button class="copy-btn" onclick="copyCode('git add .')">복사</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="step-card">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <h4>[일상 루틴 2] 세이브 포인트 만들기 (커밋)</h4>
+            <p>어떤 작업을 했는지 한 줄 요약 메시지와 함께 기록을 봉인합니다.</p>
+            <div class="code-box">
+              <span>git commit -m "목양 수첩 성경 말씀 데이터 추가 완료"</span>
+              <button class="copy-btn" onclick="copyCode('git commit -m \"목양 수첩 성경 말씀 데이터 추가 완료\"')">복사</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="step-card">
+          <div class="step-num">5</div>
+          <div class="step-content">
+            <h4>[일상 루틴 3] GitHub 원격 금고로 안전하게 전송하기</h4>
+            <p>내 컴퓨터가 고장 나도 끄떡없도록 GitHub 클라우드에 최종 업로드합니다.</p>
+            <div class="code-box">
+              <span>git push origin main</span>
+              <button class="copy-btn" onclick="copyCode('git push origin main')">복사</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: EMERGENCY CHEATSHEET -->
+    <section id="emergency" class="card">
+      <div class="card-title">
+        <span>🚨</span> 당황하지 않는 긴급 복구 & 상황별 치트시트
+      </div>
+      <p class="card-desc">실수를 했거나 문제가 생겼을 때 바로 복사해서 해결하는 비상 처방전입니다.</p>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>내가 처한 상황</th>
+              <th>해결 명령어</th>
+              <th>설명</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>지금 내 상태가 궁금할 때</strong></td>
+              <td><code>git status</code></td>
+              <td>어떤 파일이 수정되었고 어떤 파일이 담겼는지 확인</td>
+            </tr>
+            <tr>
+              <td><strong>지난 커밋 기록들을 보고 싶을 때</strong></td>
+              <td><code>git log --oneline</code></td>
+              <td>과거에 기록한 세이브 포인트 목록을 한 줄씩 깔끔하게 열람</td>
+            </tr>
+            <tr>
+              <td><strong>수정하다가 망쳐서 원본으로 되돌리고 싶을 때</strong></td>
+              <td><code>git restore .</code></td>
+              <td>아직 커밋하지 않은 모든 수정을 취소하고 마지막 저장 상태로 복구</td>
+            </tr>
+            <tr>
+              <td><strong>방금 쓴 커밋 메시지를 고치고 싶을 때</strong></td>
+              <td><code>git commit --amend -m "새로운 메시지"</code></td>
+              <td>마지막 커밋의 설명 문구를 덮어써서 수정</td>
+            </tr>
+            <tr>
+              <td><strong>GitHub에서 최신 코드 내려받고 싶을 때</strong></td>
+              <td><code>git pull origin main</code></td>
+              <td>클라우드에 있는 최신 변경 사항을 내 컴퓨터로 동기화</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // Simulator State
+    let step = 0;
+
+    function updateSimulatorUI() {
+      const wBox = document.getElementById('box-working');
+      const sBox = document.getElementById('box-stage');
+      const cBox = document.getElementById('box-commit');
+      const rBox = document.getElementById('box-remote');
+
+      const fWork = document.getElementById('file-working');
+      const fStage = document.getElementById('file-stage');
+      const fCommit = document.getElementById('file-commit');
+      const fRemote = document.getElementById('file-remote');
+      const log = document.getElementById('sim-log');
+
+      // Reset highlights
+      [wBox, sBox, cBox, rBox].forEach(b => b.classList.remove('highlight'));
+
+      if (step === 0) {
+        wBox.classList.add('highlight');
+        fWork.className = 'file-chip';
+        fWork.innerText = '언약교회4구역.html (수정 없음)';
+        fStage.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">비어 있음</span>';
+        fCommit.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">기록 없음</span>';
+        fRemote.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">동기화 전</span>';
+        log.innerText = '$ git status\n현재 모든 파일이 깨끗한 최신 상태입니다. [1. 코드 수정]을 눌러보세요.';
+      } else if (step === 1) {
+        wBox.classList.add('highlight');
+        fWork.className = 'file-chip modified';
+        fWork.innerText = '● 언약교회4구역.html (수정됨!)';
+        fStage.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">비어 있음</span>';
+        log.innerText = '$ git status\nChanges not staged for commit:\n  modified: 언약교회4구역.html\n(파일이 수정되었습니다! 포장 상자에 담으려면 [2. git add .]를 누르세요)';
+      } else if (step === 2) {
+        sBox.classList.add('highlight');
+        fWork.className = 'file-chip';
+        fWork.innerText = '언약교회4구역.html';
+        fStage.innerHTML = '<div class="file-chip staged">✓ 언약교회4구역.html</div>';
+        log.innerText = '$ git add .\n$ git status\nChanges to be committed:\n  staged: 언약교회4구역.html\n(성공적으로 포장 상자에 담겼습니다. 이제 [3. git commit]으로 봉인하세요)';
+      } else if (step === 3) {
+        cBox.classList.add('highlight');
+        fStage.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">비어 있음 (커밋 완료)</span>';
+        fCommit.innerHTML = '<div class="file-chip committed">📦 v1.1.0 [a3f89c]</div>';
+        log.innerText = '$ git commit -m "심방 일정 캘린더 기능 추가 완료"\n[main a3f89c] 심방 일정 캘린더 기능 추가 완료\n 1 file changed, 45 insertions(+)\n(내 컴퓨터 보관소에 안전하게 저장되었습니다! 이제 [4. git push]로 구름에 전송하세요)';
+      } else if (step === 4) {
+        rBox.classList.add('highlight');
+        fRemote.innerHTML = '<div class="file-chip pushed">☁️ GitHub 동기화 완료</div>';
+        log.innerText = '$ git push origin main\nEnumerating objects: 5, done.\nWriting objects: 100% (5/5), 3.2 KiB, done.\nTo https://github.com/hye-young/covenant-church.git\n * [new branch] main -> main\n축하합니다! GitHub 클라우드 백업까지 완벽하게 완료되었습니다! 🎉';
+      }
+    }
+
+    function simModify() {
+      step = 1;
+      updateSimulatorUI();
+    }
+
+    function simAdd() {
+      if (step < 1) {
+        alert("먼저 [1. 코드 수정]을 눌러 파일을 변경해 주세요!");
+        return;
+      }
+      step = 2;
+      updateSimulatorUI();
+    }
+
+    function simCommit() {
+      if (step < 2) {
+        alert("먼저 [2. git add .]를 눌러 상자에 파일을 담아주세요!");
+        return;
+      }
+      step = 3;
+      updateSimulatorUI();
+    }
+
+    function simPush() {
+      if (step < 3) {
+        alert("먼저 [3. git commit]을 눌러 저장 도장을 찍어주세요!");
+        return;
+      }
+      step = 4;
+      updateSimulatorUI();
+    }
+
+    function simReset() {
+      step = 0;
+      updateSimulatorUI();
+    }
+
+    // Copy to clipboard
+    function copyCode(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        const toast = document.getElementById('toast');
+        toast.style.display = 'block';
+        setTimeout(() => {
+          toast.style.display = 'none';
+        }, 2200);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      updateSimulatorUI();
+    });
+  </script>
+</body>
+</html>

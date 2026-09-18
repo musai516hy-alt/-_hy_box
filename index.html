@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Project UpToSpace | Celestial Mythic Fantasy 3D Web Game</title>
+  <meta name="description" content="천공의 신화적 부유 유적을 딛고 1,500m 우주 성문까지 올라가는 3D 웹 액션 플랫폼 게임">
+  <link rel="stylesheet" href="styles.css">
+  <!-- Local Offline Three.js Library -->
+  <script src="src/three.min.js"></script>
+</head>
+<body>
+  <!-- 3D WebGL Canvas -->
+  <canvas id="game-canvas"></canvas>
+
+  <!-- Top Glassmorphism HUD -->
+  <header class="hud-top">
+    <div class="hud-card hud-altitude-card">
+      <div class="hud-label">ALTITUDE</div>
+      <div class="hud-value-large" id="hud-altitude">0.0 m</div>
+      <div class="hud-sub" id="hud-max-alt">BEST: 0m</div>
+    </div>
+
+    <div class="hud-center">
+      <div class="hud-zone zone-1" id="hud-zone">ZONE 1 : THE ASCENT (0~500m)</div>
+      <div class="hud-speed-tag" id="hud-speed">0 km/h</div>
+    </div>
+
+    <div class="hud-actions">
+      <button class="hud-btn" id="btn-mute" title="소리 켜기/끄기">🔊 SOUND: ON</button>
+      <button class="hud-btn" id="btn-reset" title="체크포인트로 이동">🔄 CHECKPOINT</button>
+      <button class="hud-btn pc-only" id="btn-pointer-lock" title="마우스 락 토글">🖱️ MOUSE LOCK</button>
+    </div>
+  </header>
+
+  <!-- Fall Warning Meter (Shown when falling) -->
+  <div class="hud-fall-box" id="hud-fall-box">
+    <div class="fall-icon">⚠️</div>
+    <div class="fall-text">
+      <div class="fall-title">FREE FALL DETECTED</div>
+      <div class="fall-dist" id="hud-fall-dist">-0m (FATAL: 800m)</div>
+    </div>
+  </div>
+
+  <!-- Toast Notification (Checkpoint, Milestones) -->
+  <div class="hud-toast" id="hud-toast">✨ CHECKPOINT REACHED!</div>
+
+  <!-- 800m Despair Fall Fatal Screen Overlay -->
+  <div class="despair-overlay" id="despair-overlay">
+    <div class="despair-content">
+      <div class="despair-glitch">FATAL DESPAIR FALL</div>
+      <h1 class="despair-title">800M+ 수직 추락 발생</h1>
+      <p class="despair-desc">통제 불가능한 자유낙하로 인해 모든 체크포인트가 소실되었습니다.</p>
+      <div class="despair-stat">추락 거리: <span id="despair-fall-number">820m</span></div>
+      <div class="despair-restart">지상 0m 제단으로 강제 귀환합니다...</div>
+    </div>
+  </div>
+
+  <!-- PC Controls Guide (Bottom Center) -->
+  <div class="pc-guide pc-only">
+    <span class="key-badge">W,A,S,D</span> 이동
+    <span class="key-badge">Space</span> 점프
+    <span class="key-badge">Shift</span> 달리기
+    <span class="key-badge">Mouse</span> 시점 회전 (클릭 시 마우스 고정)
+  </div>
+
+  <!-- Mobile & Tablet Touch Layer -->
+  <div class="touch-layer" id="touch-layer">
+    <!-- Left Virtual Joystick Zone -->
+    <div class="touch-joystick-zone" id="touch-joystick-zone">
+      <div class="touch-joystick-base">
+        <div class="touch-joystick-knob" id="touch-joystick-knob"></div>
+      </div>
+      <div class="touch-hint">MOVE</div>
+    </div>
+
+    <!-- Right Area: Camera Look Gesture Zone -->
+    <div class="touch-look-zone" id="touch-look-zone"></div>
+
+    <!-- Right Virtual Buttons -->
+    <div class="touch-buttons-zone">
+      <button class="touch-action-btn btn-sprint" id="btn-touch-sprint">RUN</button>
+      <button class="touch-action-btn btn-jump" id="btn-touch-jump">JUMP</button>
+    </div>
+  </div>
+
+  <!-- Game Scripts -->
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

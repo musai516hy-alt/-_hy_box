@@ -1,0 +1,22 @@
+# 환경 변수 및 보안 자격증명 파일 (절대 커밋 및 공개 금지)
+.env
+*.env
+.env.*
+*.token
+*.key
+
+# 의존성 및 패키지
+node_modules/
+dist/
+build/
+
+# 임시 및 캐시 파일
+__pycache__/
+*.pyc
+*.log
+.DS_Store
+Thumbs.db
+
+# 에디터 및 IDE 설정
+.vscode/
+.idea/

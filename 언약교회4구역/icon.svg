@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+    <linearGradient id="heartGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF6B8B" />
+      <stop offset="100%" stop-color="#E11D48" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.18" />
+    </filter>
+  </defs>
+  <!-- 둥근 앱 아이콘 배경 -->
+  <rect width="120" height="120" rx="28" fill="url(#bg)"/>
+  
+  <!-- 굴뚝 -->
+  <rect x="76" y="28" width="10" height="20" rx="3" fill="#D97706"/>
+  
+  <!-- 지붕 -->
+  <path d="M60 20 L18 54 C16 55.5 16 58 18 59.5 L24 64 C25 64.8 26.5 65 27.5 64.2 L60 38 L92.5 64.2 C93.5 65 95 64.8 96 64 L102 59.5 C104 58 104 55.5 102 54 Z" fill="#F59E0B" filter="url(#glow)"/>
+  
+  <!-- 집 본체 -->
+  <path d="M30 56 L30 94 C30 98.4 33.6 102 38 102 L82 102 C86.4 102 90 98.4 90 94 L90 56 L60 32 Z" fill="#FFFFFF" filter="url(#glow)"/>
+  
+  <!-- 중심 사랑의 하트 -->
+  <path d="M60 92 C60 92 44 80 44 68 C44 60.5 50 55 56.5 55 C58.5 55 60 56.5 60 56.5 C60 56.5 61.5 55 63.5 55 C70 55 76 60.5 76 68 C76 80 60 92 60 92 Z" fill="url(#heartGrad)"/>
+</svg>
