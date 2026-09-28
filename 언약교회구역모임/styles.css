@@ -842,3 +842,513 @@ body {
     padding: 16px;
   }
 }
+
+/* ==========================================================
+   매일 성경 읽기 전용 UI 스타일 (통합 모듈)
+========================================================== */
+
+/* 모드 스위처 (4구역 vs 여성성경) */
+.daily-mode-switcher {
+  display: inline-flex;
+  background: #E2E8F0;
+  padding: 4px;
+  border-radius: var(--radius-full);
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.mode-switch-btn {
+  border: none;
+  background: transparent;
+  padding: 8px 18px;
+  border-radius: var(--radius-full);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mode-switch-btn.active {
+  background: #FFFFFF;
+  color: var(--primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.mode-switch-btn:hover:not(.active) {
+  color: var(--text-main);
+}
+
+/* 날짜 히어로 바 */
+.daily-date-hero-bar {
+  background: #FFFFFF;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 18px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.daily-date-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.date-badge {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  letter-spacing: -0.2px;
+}
+
+.badge-today {
+  background: #ECFDF5;
+  color: #059669;
+  border: 1px solid #A7F3D0;
+}
+
+.badge-tomorrow {
+  background: #FEF3C7;
+  color: #B45309;
+  border: 1px solid #FDE68A;
+}
+
+.badge-other {
+  background: #F1F5F9;
+  color: #64748B;
+  border: 1px solid #CBD5E1;
+}
+
+.daily-date-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin: 0;
+}
+
+.daily-date-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.date-nav-btn {
+  background: #F8FAFC;
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 7px 14px;
+  border-radius: var(--radius-md);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.date-nav-btn:hover {
+  background: #E2E8F0;
+  border-color: #CBD5E1;
+}
+
+.btn-today-highlight {
+  background: #EFF6FF;
+  border-color: #BFDBFE;
+  color: #1D4ED8;
+  font-weight: 700;
+}
+
+.date-picker-input {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 6px 10px;
+  font-size: 0.88rem;
+  font-family: inherit;
+  color: var(--text-main);
+  background: #FFFFFF;
+}
+
+/* 내일 말씀 미리보기 퀵 배너 */
+.quick-tomorrow-banner {
+  background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+  border: 1.5px solid #FDE68A;
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  box-shadow: var(--shadow-sm);
+  flex-wrap: wrap;
+}
+
+.quick-tomorrow-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.95rem;
+  color: #78350F;
+}
+
+.quick-tomorrow-btn {
+  background: #B45309;
+  color: #FFFFFF;
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(180, 83, 9, 0.3);
+  white-space: nowrap;
+}
+
+.quick-tomorrow-btn:hover {
+  background: #92400E;
+  transform: translateY(-1px);
+}
+
+/* 챕터 필 */
+.chapter-pills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 18px 0;
+}
+
+.chapter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #F1F5F9;
+  color: var(--primary);
+  border: 1px solid #CBD5E1;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.chapter-pill.pill-romans {
+  background: #FFF1F2;
+  color: #BE123C;
+  border-color: #FECDD3;
+}
+
+/* 요약 카드 */
+.summary-item-card {
+  background: #FFFFFF;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.summary-item-card:hover {
+  border-color: var(--accent-gold-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.summary-item-card.card-romans {
+  border-left: 4px solid #F43F5E;
+}
+
+.summary-item-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.summary-badge {
+  background: #EFF6FF;
+  color: #1D4ED8;
+  font-size: 0.8rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+.summary-badge.badge-romans {
+  background: #FFF1F2;
+  color: #BE123C;
+}
+
+.summary-title {
+  font-weight: 800;
+  font-size: 1.02rem;
+  color: var(--primary);
+}
+
+.summary-desc {
+  font-size: 0.92rem;
+  color: var(--text-main);
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
+.summary-verse-box {
+  background: #FFFDF9;
+  border-left: 3px solid var(--accent-gold);
+  padding: 8px 12px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin-top: 8px;
+}
+
+.verse-label {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+  margin-bottom: 2px;
+}
+
+.verse-text {
+  font-size: 0.88rem;
+  font-style: italic;
+  color: #475569;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.summary-meditation-box {
+  background: #F0FDF4;
+  border-left: 3px solid #059669;
+  padding: 8px 12px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin-top: 8px;
+}
+
+.meditation-label {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #059669;
+  margin-bottom: 2px;
+}
+
+.meditation-text {
+  font-size: 0.88rem;
+  color: #166534;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* 카카오톡 메시지 박스 */
+.kakao-preview-box {
+  background: #FDFBF7;
+  border: 1.5px solid #FCD34D;
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.template-pills-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.template-pill-btn {
+  background: #FFFFFF;
+  border: 1px solid var(--border-color);
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.template-pill-btn.active {
+  background: #FEF3C7;
+  color: #92400E;
+  border-color: #FCD34D;
+}
+
+.kakao-textarea {
+  width: 100%;
+  height: 230px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #1E293B;
+  background: #FFFFFF;
+  resize: vertical;
+  margin-bottom: 14px;
+  box-sizing: border-box;
+}
+
+.btn-kakao-copy {
+  background: #FEE500;
+  color: #3C1E1E;
+  border: none;
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  font-size: 1.05rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(254, 229, 0, 0.4);
+  transition: all 0.2s ease;
+}
+
+.btn-kakao-copy:hover {
+  background: #FADA0A;
+  transform: translateY(-1px);
+}
+
+.btn-copied {
+  background: #10B981 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35) !important;
+}
+
+/* 식구 완독 체크 칩 그리드 */
+.member-check-chips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.member-check-chip {
+  background: #FFFFFF;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-full);
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  font-family: inherit;
+}
+
+.member-check-chip:hover {
+  border-color: #94A3B8;
+  background: #F8FAFC;
+}
+
+.member-check-chip.checked {
+  background: #ECFDF5;
+  border-color: #10B981;
+}
+
+.chip-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #E2E8F0;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.member-check-chip.checked .chip-avatar {
+  background: #10B981;
+  color: #FFFFFF;
+}
+
+.chip-name {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--text-main);
+  flex: 1;
+  text-align: left;
+  margin-left: 8px;
+}
+
+.chip-icon {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #94A3B8;
+}
+
+.member-check-chip.checked .chip-icon {
+  color: #059669;
+}
+
+/* 통독 진도율 프로그레스 바 */
+.daily-progress-container {
+  background: #FFFFFF;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 18px 22px;
+  margin-top: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.daily-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.daily-progress-bar {
+  width: 100%;
+  height: 12px;
+  background: #E2E8F0;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  position: relative;
+}
+
+.daily-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10B981 0%, #059669 100%);
+  border-radius: var(--radius-full);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 폭죽 파티클 애니메이션 */
+.confetti-piece {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  z-index: 9999;
+  pointer-events: none;
+  animation: confetti-fall ease-in-out forwards;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+

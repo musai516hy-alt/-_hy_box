@@ -1,8 +1,11 @@
-// 성경 66권 데이터베이스 및 통독 장수 계산 유틸리티
-// 구약 39권(929장) + 신약 27권(260장) = 총 66권(1,189장)
+/**
+ * 원미언약교회 여성 성도 매일 성경 읽기 통독 엔진
+ * - Track 1: 이사야부터 전권 순차 통독 (하루 3장)
+ * - Track 2: 로마서 16장 무한 순환 로테이션 통독 (하루 2장)
+ */
 
 const BIBLE_BOOKS = [
-  // === 구약 (Old Testament: 39권, 929장) ===
+  // === 구약 (39권, 929장) ===
   { id: 1, name: "창세기", abbr: "창", testament: "OT", chapters: 50 },
   { id: 2, name: "출애굽기", abbr: "출", testament: "OT", chapters: 40 },
   { id: 3, name: "레위기", abbr: "레", testament: "OT", chapters: 27 },
@@ -43,7 +46,7 @@ const BIBLE_BOOKS = [
   { id: 38, name: "스가랴", abbr: "슥", testament: "OT", chapters: 14 },
   { id: 39, name: "말라기", abbr: "말", testament: "OT", chapters: 4 },
 
-  // === 신약 (New Testament: 27권, 260장) ===
+  // === 신약 (27권, 260장) ===
   { id: 40, name: "마태복음", abbr: "마", testament: "NT", chapters: 28 },
   { id: 41, name: "마가복음", abbr: "막", testament: "NT", chapters: 16 },
   { id: 42, name: "누가복음", abbr: "눅", testament: "NT", chapters: 24 },
@@ -73,145 +76,10 @@ const BIBLE_BOOKS = [
   { id: 66, name: "요한계시록", abbr: "계", testament: "NT", chapters: 22 }
 ];
 
-const TOTAL_BIBLE_CHAPTERS = 1189; // 구약 929 + 신약 260
-const OT_CHAPTERS = 929;
-const NT_CHAPTERS = 260;
+const TOTAL_BIBLE_CHAPTERS = 1189;
 
 /**
- * 성경 이름 또는 약칭으로 성경 권 정보 찾기
- */
-function findBibleBook(nameOrAbbr) {
-  if (!nameOrAbbr) return null;
-  const clean = nameOrAbbr.trim().replace(/\s+/g, '');
-  return BIBLE_BOOKS.find(b => 
-    b.name === clean || 
-    b.abbr === clean || 
-    clean.startsWith(b.name) || 
-    clean.startsWith(b.abbr) ||
-    b.name.startsWith(clean)
-  ) || null;
-}
-
-/**
- * 두 지점(권+장) 사이의 총 장수 계산
- * e.g., (창세기, 1) ~ (창세기, 15) => 15장
- * e.g., (창세기, 48) ~ (출애굽기, 3) => 창48..50(3장) + 출1..3(3장) = 6장
- */
-function calculateChaptersBetween(startBookName, startChapter, endBookName, endChapter) {
-  const startBook = findBibleBook(startBookName);
-  const endBook = findBibleBook(endBookName || startBookName);
-
-  if (!startBook) return 0;
-  if (!endBook) {
-    return 1;
-  }
-
-  const sCh = Math.max(1, parseInt(startChapter) || 1);
-  const eCh = Math.max(1, parseInt(endChapter) || sCh);
-
-  // 1. 같은 권인 경우
-  if (startBook.id === endBook.id) {
-    if (eCh >= sCh) {
-      return Math.min(eCh, startBook.chapters) - sCh + 1;
-    }
-    return 1;
-  }
-
-  // 2. 다른 권인 경우 (순서대로)
-  let firstId = startBook.id;
-  let lastId = endBook.id;
-  if (firstId > lastId) {
-    [firstId, lastId] = [lastId, firstId];
-  }
-
-  let total = 0;
-  for (let id = firstId; id <= lastId; id++) {
-    const book = BIBLE_BOOKS.find(b => b.id === id);
-    if (!book) continue;
-
-    if (id === firstId) {
-      total += Math.max(0, book.chapters - sCh + 1);
-    } else if (id === lastId) {
-      total += Math.min(eCh, book.chapters);
-    } else {
-      total += book.chapters;
-    }
-  }
-
-  return total;
-}
-
-/**
- * 한국어 본문 문자열 자동 해석 및 장수 계산기
- */
-function parsePassageString(text) {
-  if (!text || typeof text !== 'string') return { summary: '', totalChapters: 0, details: [] };
-
-  const cleaned = text.trim();
-  let totalChapters = 0;
-  const details = [];
-
-  const parts = cleaned.split(/[,;\n]+/).map(p => p.trim()).filter(Boolean);
-
-  for (const part of parts) {
-    // 패턴 A: 다른 권간 범위 (예: 창세기 48장 ~ 출애굽기 3장)
-    const crossMatch = part.match(/([가-힣]+)\s*(\d+)\s*(?:장)?\s*[-~]\s*([가-힣]+)\s*(\d+)\s*(?:장)?/);
-    if (crossMatch) {
-      const b1 = crossMatch[1];
-      const ch1 = parseInt(crossMatch[2]);
-      const b2 = crossMatch[3];
-      const ch2 = parseInt(crossMatch[4]);
-      const count = calculateChaptersBetween(b1, ch1, b2, ch2);
-      if (count > 0) {
-        totalChapters += count;
-        details.push({ raw: part, count });
-        continue;
-      }
-    }
-
-    // 패턴 B: 한 권 내 범위 (예: 창세기 1~15장, 창 1-15, 마 5장)
-    const singleMatch = part.match(/([가-힣]+)\s*(\d+)\s*(?:장)?\s*(?:[-~]\s*(\d+)\s*(?:장)?)?/);
-    if (singleMatch) {
-      const bookName = singleMatch[1];
-      const startCh = parseInt(singleMatch[2]);
-      const endCh = singleMatch[3] ? parseInt(singleMatch[3]) : startCh;
-      const count = calculateChaptersBetween(bookName, startCh, bookName, endCh);
-      if (count > 0) {
-        totalChapters += count;
-        details.push({ raw: part, count });
-        continue;
-      }
-    }
-
-    // 패턴 C: "전권" 완독 (예: 룻기 전권)
-    const fullMatch = part.match(/([가-힣]+)\s*(?:전권|전체|완독)/);
-    if (fullMatch) {
-      const book = findBibleBook(fullMatch[1]);
-      if (book) {
-        totalChapters += book.chapters;
-        details.push({ raw: part, count: book.chapters });
-        continue;
-      }
-    }
-
-    // 단순 숫자만 있는 경우 ("15장")
-    const justNumMatch = part.match(/(\d+)\s*장/);
-    if (justNumMatch) {
-      const num = parseInt(justNumMatch[1]);
-      totalChapters += num;
-      details.push({ raw: part, count: num });
-    }
-  }
-
-  return {
-    raw: text,
-    totalChapters,
-    details
-  };
-}
-
-/**
- * 특정 권과 장의 전권 누적 인덱스 (1 ~ 1189) 계산
+ * 전역 장수 인덱스 (1 ~ 1189) 구하기
  */
 function getGlobalChapter(bookId, chapter) {
   let acc = 0;
@@ -226,7 +94,7 @@ function getGlobalChapter(bookId, chapter) {
 }
 
 /**
- * 전권 누적 인덱스 (1 ~ 1189)로부터 책과 장 찾기
+ * 전역 장수 인덱스로부터 책과 장수 구하기
  */
 function getBookAndChapterFromGlobal(globalIndex) {
   let normalized = ((globalIndex - 1) % TOTAL_BIBLE_CHAPTERS) + 1;
@@ -248,9 +116,9 @@ function getBookAndChapterFromGlobal(globalIndex) {
 }
 
 /**
- * 시작 전역 인덱스로부터 연속 n개 장 목록 반환
+ * [Track 1] 시작 전역 인덱스로부터 연속 n개 장 목록 반환
  */
-function getConsecutiveChapters(startGlobalIndex, count = 3) {
+function getTrack1Chapters(startGlobalIndex, count = 3) {
   const result = [];
   for (let i = 0; i < count; i++) {
     result.push(getBookAndChapterFromGlobal(startGlobalIndex + i));
@@ -259,8 +127,32 @@ function getConsecutiveChapters(startGlobalIndex, count = 3) {
 }
 
 /**
+ * [Track 2] 로마서(총 16장) 순환 로테이션 n개 장 목록 반환
+ * anchorCh: 기준일 로마서 시작 장수 (예: 9월 28일 로마서 12장)
+ * diffDays: 기준일로부터의 일수 차이
+ * count: 하루 읽을 장수 (기본 2장)
+ */
+function getRomansRotationChapters(anchorCh, diffDays, count = 2) {
+  const romansBook = BIBLE_BOOKS.find(b => b.id === 45); // 로마서
+  const totalRomansChapters = 16;
+  
+  // 0-indexed로 정규화 연산
+  let start0 = ((anchorCh - 1) + (diffDays * count)) % totalRomansChapters;
+  if (start0 < 0) start0 += totalRomansChapters;
+
+  const result = [];
+  for (let i = 0; i < count; i++) {
+    const ch = ((start0 + i) % totalRomansChapters) + 1;
+    result.push({
+      book: romansBook,
+      chapter: ch
+    });
+  }
+  return result;
+}
+
+/**
  * 연속된 장 목록을 사람이 읽기 편한 한국어 범위 문자열로 변환
- * 예: "열왕기상 13장 - 15장"
  */
 function formatPassageRange(chaptersList) {
   if (!chaptersList || chaptersList.length === 0) return "";
@@ -271,49 +163,12 @@ function formatPassageRange(chaptersList) {
     if (first.chapter === last.chapter) {
       return `${first.book.name} ${first.chapter}장`;
     }
+    // 로마서 순환으로 16장 다음 1장이 오는 경우 처리
+    if (first.chapter > last.chapter) {
+      return `${first.book.name} ${first.chapter}장, ${last.chapter}장`;
+    }
     return `${first.book.name} ${first.chapter}장 - ${last.chapter}장`;
   } else {
     return `${first.book.name} ${first.chapter}장 - ${last.book.name} ${last.chapter}장`;
   }
-}
-
-/**
- * 축약형 표기 (예: 왕상 13-15장)
- */
-function formatPassageAbbr(chaptersList) {
-  if (!chaptersList || chaptersList.length === 0) return "";
-  const first = chaptersList[0];
-  const last = chaptersList[chaptersList.length - 1];
-
-  if (first.book.id === last.book.id) {
-    if (first.chapter === last.chapter) {
-      return `${first.book.abbr} ${first.chapter}장`;
-    }
-    return `${first.book.abbr} ${first.chapter}-${last.chapter}장`;
-  } else {
-    return `${first.book.abbr} ${first.chapter}장 - ${last.book.abbr} ${last.chapter}장`;
-  }
-}
-
-/**
- * 이름이나 약어로 성경 권 찾기 (findBibleBook 래퍼)
- */
-function findBook(nameOrAbbr) {
-  return findBibleBook(nameOrAbbr);
-}
-
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    BIBLE_BOOKS,
-    TOTAL_BIBLE_CHAPTERS,
-    findBibleBook,
-    findBook,
-    calculateChaptersBetween,
-    parsePassageString,
-    getGlobalChapter,
-    getBookAndChapterFromGlobal,
-    getConsecutiveChapters,
-    formatPassageRange,
-    formatPassageAbbr
-  };
 }

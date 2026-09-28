@@ -1,24 +1,20 @@
-// 언약교회구역모임 PWA 서비스 워커 (오프라인 캐싱 및 스마트폰 앱 설치 지원)
-const CACHE_NAME = 'covenant-district-v5';
+// 언약교회 4구역 매일 성경 읽기 서비스 워커 (오프라인 지원 및 모바일 PWA 앱 설치)
+const CACHE_NAME = 'covenant-daily-bible-v1';
 const ASSETS = [
   './',
   './index.html',
   './styles.css',
   './app.js',
-  './bible_data.js',
+  './bible_engine.js',
   './bible_summaries.js',
-  './daily_bible_logic.js',
   './manifest.json',
   './icon-192.png',
-  './icon.png',
-  './icon.svg'
+  './icon.png'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
-    }).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting())
   );
 });
 

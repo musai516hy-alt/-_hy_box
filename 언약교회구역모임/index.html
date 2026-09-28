@@ -37,9 +37,17 @@
           <div class="brand-subtitle" id="app-brand-subtitle">언약교회 구역 목양 & 보고 솔루션</div>
         </div>
       </div>
-      <div class="user-badge" id="header-user-badge">
-        <span>👑</span> <strong id="header-leader-name">손혜영 구역장님</strong> (<span id="header-district-name">언약교회
-          4구역</span>)
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div class="user-badge" id="header-user-badge">
+          <span>👑</span> <strong id="header-leader-name">손혜영 구역장님</strong> (<span id="header-district-name">언약교회
+            4구역</span>)
+        </div>
+        <button onclick="switchTabToDaily('district4')" class="btn btn-gold btn-xs no-print" style="cursor: pointer; display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; font-weight: 700; white-space: nowrap;">
+          <span>📱</span> 4구역 매일성경
+        </button>
+        <button onclick="switchTabToDaily('women')" class="btn btn-outline btn-xs no-print" style="cursor: pointer; display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; font-weight: 700; white-space: nowrap; color: #FFF; border-color: rgba(255,255,255,0.4);">
+          <span>🌸</span> 원미 여성성경
+        </button>
       </div>
     </div>
 
@@ -48,8 +56,11 @@
       <button class="tab-btn active" data-tab="tab-home">
         <span>🏠</span> 홈 & 모임
       </button>
+      <button class="tab-btn" data-tab="tab-daily-bible" style="color: var(--sage-green); font-weight: 700;">
+        <span>📖</span> 매일 성경 <span class="tab-badge" style="background: var(--sage-green); color: #fff;">오늘</span>
+      </button>
       <button class="tab-btn" data-tab="tab-reading">
-        <span>📖</span> 성경 통독 <span class="tab-badge" id="nav-weekly-badge">계산기</span>
+        <span>📊</span> 구역 통독 <span class="tab-badge" id="nav-weekly-badge">계산기</span>
       </button>
       <button class="tab-btn" data-tab="tab-prayer">
         <span>🙏</span> 기도 제목
@@ -147,8 +158,184 @@
       </div>
     </section>
 
-    <!-- ==================== 2. 성경 통독 탭 ==================== -->
+    <!-- ==================== 2. 매일 성경 읽기 전용 탭 ==================== -->
+    <section id="tab-daily-bible" class="tab-content">
+      <!-- 상단 모드 스위처 & 외부 성경 링크 -->
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+        <div class="daily-mode-switcher">
+          <button id="daily-mode-btn-d4" class="mode-switch-btn active" onclick="setDailyBibleMode('district4')">
+            <span>👑</span> 4구역 매일성경 (열왕기상)
+          </button>
+          <button id="daily-mode-btn-women" class="mode-switch-btn" onclick="setDailyBibleMode('women')">
+            <span>🌸</span> 원미 여성성경 (이사야+로마서)
+          </button>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-outline btn-sm no-print" onclick="openBibleReaderOnline()" style="display: inline-flex; align-items: center; gap: 6px; background: #FFFFFF;">
+            <span>📖</span> 개역개정 성경 본문 읽기
+          </button>
+        </div>
+      </div>
+
+      <!-- 날짜 내비게이션 & 상태 히어로 바 -->
+      <div class="daily-date-hero-bar">
+        <div class="daily-date-left">
+          <span class="date-badge badge-today" id="daily-date-badge">오늘 말씀</span>
+          <h2 class="daily-date-title" id="daily-date-title">2026년 9월 28일 (월)</h2>
+        </div>
+        <div class="daily-date-controls">
+          <button class="date-nav-btn" onclick="changeDailyDateOffset(-1)">◀ 어제</button>
+          <button class="date-nav-btn btn-today-highlight" onclick="goDailyToday()">오늘</button>
+          <button class="date-nav-btn" onclick="changeDailyDateOffset(1)">내일 ▶</button>
+          <input type="date" id="daily-date-picker" class="date-picker-input" title="날짜 선택">
+        </div>
+      </div>
+
+      <!-- 2열 그리드 레이아웃 -->
+      <div class="grid-2">
+        <!-- 1열: 본문 & 장별 묵상 요약 -->
+        <div>
+          <!-- 4구역 모드 본문 영역 -->
+          <div id="daily-d4-passage-section">
+            <div class="card" style="margin-bottom: 16px; border-top: 4px solid var(--sage-green);">
+              <div class="card-header">
+                <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 8px;">
+                  <span>📖</span> <span id="daily-passage-range-title">열왕기상 10장 - 12장</span>
+                </h3>
+                <span style="font-size: 0.85rem; color: var(--sage-green); font-weight: 700;">오늘의 분량 (3장)</span>
+              </div>
+              <div class="chapter-pills-row" id="daily-chapter-pills">
+                <!-- JS 렌더링 -->
+              </div>
+            </div>
+
+            <!-- 장별 요약 카드 목록 -->
+            <div id="daily-summary-cards-container">
+              <!-- JS 렌더링 -->
+            </div>
+          </div>
+
+          <!-- 원미 여성성경 모드 본문 영역 (기본 숨김) -->
+          <div id="daily-women-passage-section" style="display: none;">
+            <div class="card" style="margin-bottom: 14px; border-top: 4px solid #E11D48;">
+              <div class="card-header">
+                <h3 style="font-size: 1.1rem; font-weight: 800; color: #9F1239; display: flex; align-items: center; gap: 8px;">
+                  <span>📜</span> <span id="women-track1-title">이사야 14장 - 16장</span>
+                </h3>
+                <span style="font-size: 0.82rem; color: #BE123C; font-weight: 700;">구약 순차 통독</span>
+              </div>
+              <div class="chapter-pills-row" id="women-track1-pills">
+                <!-- JS 렌더링 -->
+              </div>
+            </div>
+
+            <div class="card" style="margin-bottom: 16px; border-top: 4px solid #3B82F6;">
+              <div class="card-header">
+                <h3 style="font-size: 1.1rem; font-weight: 800; color: #1E40AF; display: flex; align-items: center; gap: 8px;">
+                  <span>🕊️</span> <span id="women-track2-title">로마서 12장 - 13장 (함께 읽기)</span>
+                </h3>
+                <span style="font-size: 0.82rem; color: #2563EB; font-weight: 700;">신약 집중 묵상</span>
+              </div>
+              <div class="chapter-pills-row" id="women-track2-pills">
+                <!-- JS 렌더링 -->
+              </div>
+            </div>
+
+            <!-- 장별 요약 카드 목록 -->
+            <div id="women-summary-cards-container">
+              <!-- JS 렌더링 -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 2열: 카카오톡 나눔 메시지 박스 & 식구 완독 체크 & 통독 달성률 -->
+        <div>
+          <!-- 카카오톡 원클릭 메시지 생성기 박스 -->
+          <div class="kakao-preview-box">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+              <div style="font-weight: 800; font-size: 1.05rem; color: #78350F; display: flex; align-items: center; gap: 6px;">
+                <span>💬</span> 단톡방 나눔 메시지 원클릭 생성
+              </div>
+              <!-- 템플릿 스타일 선택 버튼 -->
+              <div class="template-pills-row" style="margin-bottom: 0;">
+                <button type="button" class="template-pill-btn active" data-style="grace" onclick="changeDailyTemplateStyle('grace')">🌿 은혜나눔형</button>
+                <button type="button" class="template-pill-btn" data-style="simple" onclick="changeDailyTemplateStyle('simple')">⚡ 심플형</button>
+                <button type="button" class="template-pill-btn" data-style="warm" onclick="changeDailyTemplateStyle('warm')">☀️ 아침문안형</button>
+              </div>
+            </div>
+
+            <textarea id="daily-kakao-preview-textarea" class="kakao-textarea" spellcheck="false"
+              placeholder="카카오톡 메시지가 자동으로 조립됩니다..."></textarea>
+
+            <div style="display: flex; gap: 10px; flex-direction: column;">
+              <button id="btn-copy-daily-kakao" class="btn-kakao-copy" onclick="copyDailyKakaoMessage()">
+                <span>📋</span> 원클릭 카카오톡 나눔 메시지 복사하기
+              </button>
+              <button class="btn btn-outline btn-sm no-print" onclick="shareDailyKakaoDirect()" style="width: 100%; justify-content: center; background: #FFFFFF;">
+                <span>📲</span> 모바일 바로 공유 (카카오톡/SNS)
+              </button>
+            </div>
+          </div>
+
+          <!-- 오늘의 구역 식구 완독 체크리스트 -->
+          <div class="card" style="margin-top: 18px; margin-bottom: 0;">
+            <div class="card-header">
+              <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 6px;">
+                <span>✅</span> 오늘의 구역 식구 완독 체크
+              </h3>
+              <span id="daily-checklist-count-display" style="font-size: 0.88rem; font-weight: 800; color: var(--sage-green);">0 / 7명 완독</span>
+            </div>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 6px;">
+              구역 식구가 카톡에 "완독"이나 "아멘"을 올리면 원터치로 체크해 주세요!
+            </p>
+            <div class="member-check-chips-grid" id="daily-member-checklist-grid">
+              <!-- JS 렌더링 -->
+            </div>
+          </div>
+
+          <!-- 통독 누적 달성률 & 진도율 게이지 -->
+          <div class="daily-progress-container">
+            <div class="daily-progress-header">
+              <div style="font-size: 0.88rem; font-weight: 700; color: var(--primary);">
+                <span>📊</span> 언약교회 성경 66권 1독 달성률
+              </div>
+              <div style="font-size: 1.1rem; font-weight: 800; color: #059669;" id="daily-progress-percent">
+                25.8%
+              </div>
+            </div>
+            <div class="daily-progress-bar">
+              <div class="daily-progress-fill" id="daily-progress-fill" style="width: 25.8%;"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 0.78rem; color: var(--text-muted);">
+              <span>창세기 1장부터</span>
+              <span id="daily-progress-chapters">306장 / 1,189장</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 3. 구역 통독 탭 ==================== -->
     <section id="tab-reading" class="tab-content">
+      <!-- 매일 성경 카톡 생성기 바로가기 배너 -->
+      <div style="background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%); border: 1.5px solid #FCD34D; border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;" class="no-print">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 1.6rem;">📱</span>
+          <div>
+            <div style="font-weight: 800; font-size: 1.05rem; color: #78350F;">매일 성경 읽기 & 카카오톡 메시지 원클릭 생성기</div>
+            <div style="font-size: 0.85rem; color: #92400E;">매일 아침 올릴 성경 본문 3장 요약, 묵상 구절, 완독 격려 문구를 원클릭으로 복사합니다.</div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button onclick="switchTabToDaily('district4')" class="btn btn-gold btn-sm" style="cursor: pointer; font-weight: 800; padding: 8px 14px;">
+            📖 4구역 매일성경 바로가기 ➔
+          </button>
+          <button onclick="switchTabToDaily('women')" class="btn btn-outline btn-sm" style="cursor: pointer; font-weight: 800; padding: 8px 14px; background: #FFF1F2; color: #BE123C; border-color: #FECDD3;">
+            🌸 원미 여성성경 바로가기 ➔
+          </button>
+        </div>
+      </div>
+
       <div class="card" style="background: #FFFDF9; border: 1.5px solid var(--accent-gold-border);">
         <div class="card-header">
           <h2 class="card-title" style="color: var(--accent-gold);">
@@ -698,6 +885,8 @@
   </div>
 
   <script src="bible_data.js"></script>
+  <script src="bible_summaries.js"></script>
+  <script src="daily_bible_logic.js"></script>
   <script src="app.js"></script>
 
   <script>

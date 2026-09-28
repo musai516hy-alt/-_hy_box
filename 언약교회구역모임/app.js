@@ -14,7 +14,15 @@ const DEFAULT_DATA = {
     memo: "모임 후 다과 및 중보기도 나눔 시간 준비",
     noMeeting: false
   },
-  members: [],
+  members: [
+    { id: 1, name: "손혜영", role: "구역장", attended: true, weeklyPassage: "열왕기상 10-12장", weeklyChapters: 3, totalAccumulated: 303, prayers: [], isMentoringTarget: false },
+    { id: 2, name: "권가람", role: "부구역장", attended: true, weeklyPassage: "열왕기상 10-12장", weeklyChapters: 3, totalAccumulated: 303, prayers: [], isMentoringTarget: false },
+    { id: 3, name: "모점례", role: "구역원", attended: true, weeklyPassage: "열왕기상 10-12장", weeklyChapters: 3, totalAccumulated: 303, prayers: [], isMentoringTarget: false },
+    { id: 4, name: "이경숙", role: "구역원", attended: true, weeklyPassage: "열왕기상 10-12장", weeklyChapters: 3, totalAccumulated: 303, prayers: [], isMentoringTarget: false },
+    { id: 5, name: "손영란", role: "구역원", attended: true, weeklyPassage: "열왕기상 10-12장", weeklyChapters: 3, totalAccumulated: 303, prayers: [], isMentoringTarget: false },
+    { id: 6, name: "권수아", role: "구역원", attended: true, weeklyPassage: "열왕기상 10-12장", weeklyChapters: 3, totalAccumulated: 303, prayers: [], isMentoringTarget: false },
+    { id: 7, name: "육선경", role: "구역원", attended: true, weeklyPassage: "열왕기상 10-12장", weeklyChapters: 3, totalAccumulated: 303, prayers: [], isMentoringTarget: false }
+  ],
   reportHeader: "샬롬! 목사님, 이번 주 구역 사역 및 모임 결과를 보고드립니다.",
   reportFooter: "구역 식구들 모두 말씀과 기도로 든든히 세워져 가고 있습니다. 목사님의 영육 강건하심을 위해 기도합니다.",
   customNotes: ""
@@ -26,6 +34,9 @@ function initApp() {
   loadData();
   renderAll();
   bindEvents();
+  if (typeof initDailyBibleModule === 'function') {
+    initDailyBibleModule();
+  }
 }
 
 function loadData() {
@@ -52,6 +63,10 @@ function loadData() {
           appData.meeting.location = "교회예배당";
           needsSave = true;
         }
+      }
+      if (!appData.members || !Array.isArray(appData.members) || appData.members.length === 0) {
+        appData.members = JSON.parse(JSON.stringify(DEFAULT_DATA.members));
+        needsSave = true;
       }
       if (appData.members && Array.isArray(appData.members)) {
         appData.members.forEach(m => {
@@ -718,6 +733,11 @@ function bindEvents() {
       if (targetTab === 'tab-report') {
         renderReportTab();
       }
+      if (targetTab === 'tab-daily-bible') {
+        if (typeof renderDailyBibleView === 'function') {
+          renderDailyBibleView();
+        }
+      }
     });
   });
 
@@ -1357,5 +1377,20 @@ function resetToDefault() {
   showToast("기본 데이터로 초기화되었습니다.");
 }
 
+/**
+ * 매일 성경 탭으로 즉시 이동하고 모드를 설정하는 헬퍼 함수
+ */
+function switchTabToDaily(mode = 'district4') {
+  const tabBtn = document.querySelector('.tab-btn[data-tab="tab-daily-bible"]');
+  if (tabBtn) {
+    tabBtn.click();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  if (typeof setDailyBibleMode === 'function') {
+    setDailyBibleMode(mode);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', initApp);
+
 
