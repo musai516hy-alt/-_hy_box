@@ -19,7 +19,7 @@
   <meta name="apple-mobile-web-app-title" content="언약교회구역모임">
   <meta name="mobile-web-app-capable" content="yes">
 
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20260928_v4">
   <link rel="stylesheet" as="style" crossorigin
     href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
 </head>
@@ -46,7 +46,7 @@
           <span>📱</span> 4구역 매일성경
         </button>
         <button onclick="switchTabToDaily('women')" class="btn btn-outline btn-xs no-print" style="cursor: pointer; display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; font-weight: 700; white-space: nowrap; color: #FFF; border-color: rgba(255,255,255,0.4);">
-          <span>🌸</span> 원미 여성성경
+          <span>🌸</span> 언약성도 매일성경
         </button>
       </div>
     </div>
@@ -164,10 +164,10 @@
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
         <div class="daily-mode-switcher">
           <button id="daily-mode-btn-d4" class="mode-switch-btn active" onclick="setDailyBibleMode('district4')">
-            <span>👑</span> 4구역 매일성경 (열왕기상)
+            <span>👑</span> 4구역 매일성경
           </button>
           <button id="daily-mode-btn-women" class="mode-switch-btn" onclick="setDailyBibleMode('women')">
-            <span>🌸</span> 원미 여성성경 (이사야+로마서)
+            <span>🌸</span> 언약성도 매일성경
           </button>
         </div>
         <div style="display: flex; gap: 8px;">
@@ -232,9 +232,9 @@
             <div class="card" style="margin-bottom: 16px; border-top: 4px solid #3B82F6;">
               <div class="card-header">
                 <h3 style="font-size: 1.1rem; font-weight: 800; color: #1E40AF; display: flex; align-items: center; gap: 8px;">
-                  <span>🕊️</span> <span id="women-track2-title">로마서 12장 - 13장 (함께 읽기)</span>
+                  <span>🕊️</span> <span id="women-track2-title">로마서 12장 - 13장 (통독 본문)</span>
                 </h3>
-                <span style="font-size: 0.82rem; color: #2563EB; font-weight: 700;">신약 집중 묵상</span>
+                <span style="font-size: 0.82rem; color: #2563EB; font-weight: 700;">신약 통독 본문</span>
               </div>
               <div class="chapter-pills-row" id="women-track2-pills">
                 <!-- JS 렌더링 -->
@@ -331,7 +331,7 @@
             📖 4구역 매일성경 바로가기 ➔
           </button>
           <button onclick="switchTabToDaily('women')" class="btn btn-outline btn-sm" style="cursor: pointer; font-weight: 800; padding: 8px 14px; background: #FFF1F2; color: #BE123C; border-color: #FECDD3;">
-            🌸 원미 여성성경 바로가기 ➔
+            🌸 언약성도 매일성경 바로가기 ➔
           </button>
         </div>
       </div>
@@ -884,10 +884,10 @@
     </div>
   </div>
 
-  <script src="bible_data.js"></script>
-  <script src="bible_summaries.js"></script>
-  <script src="daily_bible_logic.js"></script>
-  <script src="app.js"></script>
+  <script src="bible_data.js?v=20260928_v4"></script>
+  <script src="bible_summaries.js?v=20260928_v4"></script>
+  <script src="daily_bible_logic.js?v=20260928_v4"></script>
+  <script src="app.js?v=20260928_v4"></script>
 
   <script>
     function saveCustomNotes() {
@@ -902,7 +902,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
+        navigator.serviceWorker.register('./sw.js?v=20260928_v4')
           .then(reg => console.log('PWA ServiceWorker registered:', reg.scope))
           .catch(err => console.log('PWA ServiceWorker error:', err));
       });

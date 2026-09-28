@@ -25,9 +25,9 @@ const DEFAULT_DAILY_CONFIG = {
     dailyChapters: 3,
     templateStyle: "grace" // 'grace', 'simple', 'warm'
   },
-  // 여성 성도 모드 설정
+  // 언약성도 모드 설정
   women: {
-    title: "원미언약교회 여성 성도 성경 통독",
+    title: "언약성도 매일 성경 읽기",
     track1AnchorDate: "2026-09-28",
     track1BookId: 23, // 이사야
     track1Chapter: 14,
@@ -148,7 +148,7 @@ function setDailyBibleMode(mode) {
   saveDailyConfig();
   updateModeSwitcherUI();
   renderDailyBibleView();
-  showToast(mode === DAILY_MODE_DISTRICT4 ? "👑 4구역 매일성경 모드로 전환되었습니다." : "🌸 원미 여성성경 모드로 전환되었습니다.");
+  showToast(mode === DAILY_MODE_DISTRICT4 ? "👑 4구역 매일성경 모드로 전환되었습니다." : "🌸 언약성도 매일성경 모드로 전환되었습니다.");
 }
 
 function updateModeSwitcherUI() {
@@ -304,7 +304,7 @@ function renderDistrict4Content(korDateStr) {
     `).join("");
   }
 
-  // 장별 요약 카드 렌더링
+  // 장별 요약 카드 렌더링 (줄거리 요약만 표시)
   const summaryEl = document.getElementById("daily-summary-cards-container");
   if (summaryEl) {
     summaryEl.innerHTML = passagePkg.chapterDetails.map(c => `
@@ -314,16 +314,6 @@ function renderDistrict4Content(korDateStr) {
           <span class="summary-title">${c.title}</span>
         </div>
         <p class="summary-desc">${c.summary}</p>
-        ${c.verse ? `
-        <div class="summary-verse-box">
-          <span class="verse-label">묵상 구절</span>
-          <p class="verse-text">"${c.verse}"</p>
-        </div>` : ''}
-        ${c.meditation ? `
-        <div class="summary-meditation-box">
-          <span class="meditation-label">묵상 포인트</span>
-          <p class="meditation-text">${c.meditation}</p>
-        </div>` : ''}
       </div>
     `).join("");
   }
@@ -346,7 +336,7 @@ function renderWomenContent(korDateStr) {
   if (t1TitleEl) t1TitleEl.innerText = track1Title;
 
   const t2TitleEl = document.getElementById("women-track2-title");
-  if (t2TitleEl) t2TitleEl.innerText = `${track2Title} (함께 읽기)`;
+  if (t2TitleEl) t2TitleEl.innerText = `${track2Title} (통독 본문)`;
 
   const t1PillsEl = document.getElementById("women-track1-pills");
   if (t1PillsEl) {
@@ -401,116 +391,46 @@ function renderWomenContent(korDateStr) {
  * 카카오톡 복사용 메시지 조립 (4구역 모드)
  */
 function buildKakaoMessageDistrict4(passagePkg, korDateStr) {
-  const style = dailyConfig.district4.templateStyle || "grace";
-  const church = "언약교회";
-  const group = "4구역";
-
-  if (style === "simple") {
-    return [
-      `⚡ [${church} ${group}] 오늘의 성경 통독 릴레이!`,
-      `────────────────────`,
-      `📅 일시: ${korDateStr}`,
-      `📖 본문: ${passagePkg.passageTitle} (${passagePkg.chaptersCount}장)`,
-      ``,
-      `🎯 통독 완료 미션:`,
-      `오늘 말씀을 모두 읽으신 분은 단톡방에 "완독!" 또는 "아멘" 답글을 남겨주세요!`,
-      `말씀과 함께 은혜 가득한 하루 되세요! 샬롬! 🙌`,
-      `────────────────────`
-    ].join("\n");
-  }
-
-  if (style === "warm") {
-    return [
-      `☀️ 샬롬! 사랑하는 ${church} ${group} 식구 여러분,`,
-      `은혜롭고 평안한 새 아침입니다.`,
-      ``,
-      `🗓️ ${korDateStr}`,
-      `오늘 우리가 함께 마음에 새길 생명의 말씀은`,
-      `【${passagePkg.passageTitle}】입니다.`,
-      ``,
-      `오늘 하루도 주님의 선하신 인도하심을 의지하며 담대히 승리하시길 축복합니다.`,
-      `말씀을 읽으신 성도님은 편안한 마음으로 '아멘' 또는 '완독'으로 화답해 주세요! 사랑하고 축복합니다. 🕊️`
-    ].join("\n");
-  }
-
-  // 기본형: grace (은혜 나눔형)
   const summaries = passagePkg.chapterDetails.map(c => `• [${c.bookName} ${c.chapter}장] ${c.summary}`).join("\n");
 
   return [
-    `🌿 [${church} ${group}] 매일 성경 읽기`,
+    `🌿 [언약교회 4구역] 매일 성경 읽기`,
     `━━━━━━━━━━━━━━━━━━━━`,
     `🗓️ 날짜: ${korDateStr}`,
     `📖 본문: ${passagePkg.passageTitle}`,
     ``,
-    `[📌 오늘의 핵심 요약]`,
+    `[📌 오늘의 성경 말씀 요약]`,
     summaries,
     ``,
-    `[🕊️ 나눔 & 완독 인증]`,
-    `오늘도 주의 말씀 안에서 영육이 강건하고 승리하는 복된 날 되시기를 축복합니다!`,
-    `말씀을 읽으신 성도님은 단톡방에 '아멘' 또는 '완독'으로 은혜의 응답을 나누어 주세요! 🙏`,
+    `언약성도 모두가 주의 말씀으로 세워져 갈 수 있길 기도합니다. 말씀을 읽으신 후 단톡방에 '아멘' 또는 '완독'을 남겨주세요^^`,
     `━━━━━━━━━━━━━━━━━━━━`
   ].join("\n");
 }
 
 /**
- * 카카오톡 복사용 메시지 조립 (여성성경 모드)
+ * 카카오톡 복사용 메시지 조립 (언약성도 모드)
  */
 function buildKakaoMessageWomen(track1Title, track2Title, passages, korDateStr) {
-  const style = dailyConfig.women.templateStyle || "grace";
-  const church = "원미언약교회";
-  const group = "여성 성도";
-
   const t1Details = passages.track1.map(c => getChapterInfo(c.book.name, c.chapter));
   const t2Details = passages.track2.map(c => getChapterInfo(c.book.name, c.chapter));
 
-  if (style === "simple") {
-    return [
-      `⚡ [${church} ${group}] 오늘의 성경 통독 릴레이!`,
-      `────────────────────`,
-      `📅 일시: ${korDateStr}`,
-      `📖 1. 통독 본문: ${track1Title}`,
-      `📖 2. 나눔 본문: ${track2Title}`,
-      ``,
-      `🎯 통독 미션:`,
-      `오늘 말씀을 모두 읽으신 분은 "아멘!" 또는 "완독" 남겨주세요! 샬롬! 🙌`,
-      `────────────────────`
-    ].join("\n");
-  }
-
-  if (style === "warm") {
-    return [
-      `🌸 샬롬! 사랑하는 ${church} ${group} 여러분,`,
-      `주님의 은혜와 평강이 가득한 복된 아침입니다.`,
-      ``,
-      `🗓️ ${korDateStr}`,
-      `오늘 함께 읽고 묵상할 생명의 말씀입니다:`,
-      `📜 순차 통독: 【${track1Title}】`,
-      `🕊️ 로마서 묵상: 【${track2Title}】`,
-      ``,
-      `말씀을 읽으신 후 단톡방에 '아멘' 또는 '완독'으로 서로를 축복해 주세요! 💖`
-    ].join("\n");
-  }
-
-  // grace 기본형
   const t1Summaries = t1Details.map(c => `• [${c.bookName} ${c.chapter}장] ${c.summary}`).join("\n");
   const t2Summaries = t2Details.map(c => `• [${c.bookName} ${c.chapter}장] ${c.summary}`).join("\n");
 
   return [
-    `🌸 [${church} ${group}] 매일 성경 읽기`,
+    `🌸 [언약교회] 언약성도 매일 성경 읽기`,
     `━━━━━━━━━━━━━━━━━━━━`,
     `🗓️ 날짜: ${korDateStr}`,
-    `📖 1. 구약 순차 통독: ${track1Title}`,
-    `📖 2. 신약 집중 묵상: ${track2Title}`,
+    `📖 1. 구약 통독 본문: ${track1Title}`,
+    `📖 2. 신약 통독 본문: ${track2Title}`,
     ``,
     `[📌 구약 통독 요약]`,
     t1Summaries,
     ``,
-    `[🕊️ 로마서 묵상 요약]`,
+    `[📌 로마서 통독 요약]`,
     t2Summaries,
     ``,
-    `[💖 오늘의 은혜 나눔]`,
-    `오늘도 주의 말씀 안에서 영육이 강건하고 기쁨이 넘치는 하루 되세요!`,
-    `말씀을 읽으신 성도님은 '아멘' 또는 '완독'으로 은혜를 나누어 주세요! 🙏`,
+    `언약성도 모두가 주의 말씀으로 세워져 갈 수 있길 기도합니다. 말씀을 읽으신 후 단톡방에 '아멘' 또는 '완독'을 남겨주세요^^`,
     `━━━━━━━━━━━━━━━━━━━━`
   ].join("\n");
 }

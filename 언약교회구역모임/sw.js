@@ -1,5 +1,5 @@
-// 언약교회구역모임 PWA 서비스 워커 (오프라인 캐싱 및 스마트폰 앱 설치 지원)
-const CACHE_NAME = 'covenant-district-v5';
+// 언약교회구역모임 PWA 서비스 워커 (네트워크 우선 전략: 최신 코드 즉시 반영 + 오프라인 캐싱)
+const CACHE_NAME = 'covenant-district-v7';
 const ASSETS = [
   './',
   './index.html',
@@ -15,10 +15,11 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS);
-    }).then(() => self.skipWaiting())
+    })
   );
 });
 
@@ -32,26 +33,30 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// 네트워크 우선(Network-First) 전략: 온라인 시 항상 서버 최신 파일 즉시 반영
 self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
+
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-          return networkResponse;
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
         }
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
         return networkResponse;
-      }).catch(() => {
-        if (event.request.mode === 'navigate') {
-          return caches.match('./index.html');
-        }
-      });
-    })
+      })
+      .catch(() => {
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          if (event.request.mode === 'navigate') {
+            return caches.match('./index.html');
+          }
+        });
+      })
   );
 });

@@ -411,14 +411,12 @@ function getChapterInfo(bookName, chapter) {
     };
   }
 
-  // 66권 범용 스마트 Fallback 해설기
+  // 66권 범용 스마트 Fallback 해설기 (객관적 말씀 줄거리)
   return {
     bookName,
     chapter,
     title: `${bookName} ${chapter}장 말씀`,
-    summary: `${bookName} ${chapter}장을 통해 우리 삶의 주관자이신 하나님의 크신 뜻과 언약 백성을 향한 구속의 사랑을 깊이 묵상합니다.`,
-    verse: `${bookName} ${chapter}장 본문 중에서 마음에 와닿는 귀한 한 구절을 조용히 소리 내어 읽고 묵상해 보세요.`,
-    meditation: "말씀 앞에 나를 비추어 보고, 오늘 하루 주님의 선하신 뜻에 합당한 순종의 열매를 맺어가기를 결단합니다."
+    summary: `${bookName} ${chapter}장의 주요 기록과 말씀입니다.`
   };
 }
 
