@@ -397,25 +397,20 @@ function buildKakaoMessageDistrict4(passagePkg, korDateStr, styleOverride) {
   const style = styleOverride || dailyConfig?.district4?.templateStyle || "grace";
   const endingMsg = "언약성도 모두가 주의 말씀으로 세워져 갈 수 있길 기도합니다. 말씀을 읽으신 후 단톡방에 '아멘' 또는 '완독'을 남겨주세요^^";
 
-  // 1. 심플형 (간결하고 정갈한 콤팩트 디자인 - 박스선 배제)
+  // 1. 심플형 (간결하고 정갈한 콤팩트 디자인 - 말씀요약 배제)
   if (style === "simple") {
-    const summaries = passagePkg.chapterDetails.map(c => `• ${c.bookName} ${c.chapter}장: ${c.summary}`).join("\n");
     return [
       `🌿 [언약교회 4구역] 매일성경`,
       ``,
       `▪ 일시: ${korDateStr}`,
       `▪ 본문: ${passagePkg.passageTitle}`,
       ``,
-      `▪ 말씀 요약`,
-      summaries,
-      ``,
       endingMsg
     ].join("\n");
   }
 
-  // 2. 아침문안형 (따뜻한 새 아침 축복 인사)
+  // 2. 아침문안형 (따뜻한 새 아침 축복 인사 - 말씀요약 배제)
   if (style === "warm") {
-    const summaries = passagePkg.chapterDetails.map(c => `• [${c.bookName} ${c.chapter}장] ${c.summary}`).join("\n");
     return [
       `☀️ 샬롬! 언약교회 4구역 식구 여러분,`,
       `은혜롭고 평안한 새 아침입니다.`,
@@ -423,9 +418,6 @@ function buildKakaoMessageDistrict4(passagePkg, korDateStr, styleOverride) {
       `🗓 날짜: ${korDateStr}`,
       `📖 오늘 우리가 마음에 새길 생명의 말씀:`,
       `【${passagePkg.passageTitle}】`,
-      ``,
-      `[말씀 요약]`,
-      summaries,
       ``,
       `오늘 하루도 주님의 선하신 은혜 가운데 승리하시기를 축복합니다.`,
       endingMsg
@@ -458,10 +450,8 @@ function buildKakaoMessageWomen(track1Title, track2Title, passages, korDateStr, 
   const t1Details = passages.track1.map(c => getChapterInfo(c.book.name, c.chapter));
   const t2Details = passages.track2.map(c => getChapterInfo(c.book.name, c.chapter));
 
-  // 1. 심플형 (간결하고 정갈한 콤팩트 디자인 - 박스선 배제)
+  // 1. 심플형 (간결하고 정갈한 콤팩트 디자인 - 말씀요약 배제)
   if (style === "simple") {
-    const t1Simple = t1Details.map(c => `• ${c.bookName} ${c.chapter}장: ${c.summary}`).join("\n");
-    const t2Simple = t2Details.map(c => `• ${c.bookName} ${c.chapter}장: ${c.summary}`).join("\n");
     return [
       `🌸 [언약교회] 언약성도 매일성경`,
       ``,
@@ -469,18 +459,12 @@ function buildKakaoMessageWomen(track1Title, track2Title, passages, korDateStr, 
       `▪ 구약 통독 본문: ${track1Title}`,
       `▪ 신약 통독 본문: ${track2Title}`,
       ``,
-      `▪ 말씀 요약`,
-      t1Simple,
-      t2Simple,
-      ``,
       endingMsg
     ].join("\n");
   }
 
-  // 2. 아침문안형 (따뜻한 새 아침 축복 인사)
+  // 2. 아침문안형 (따뜻한 새 아침 축복 인사 - 말씀요약 배제)
   if (style === "warm") {
-    const t1Warm = t1Details.map(c => `• [${c.bookName} ${c.chapter}장] ${c.summary}`).join("\n");
-    const t2Warm = t2Details.map(c => `• [${c.bookName} ${c.chapter}장] ${c.summary}`).join("\n");
     return [
       `☀️ 샬롬! 언약교회 성도 여러분,`,
       `은혜롭고 평안한 새 아침입니다.`,
@@ -489,10 +473,6 @@ function buildKakaoMessageWomen(track1Title, track2Title, passages, korDateStr, 
       `📖 오늘 우리가 마음에 새길 생명의 말씀:`,
       `• 구약 통독 본문: ${track1Title}`,
       `• 신약 통독 본문: ${track2Title}`,
-      ``,
-      `[말씀 요약]`,
-      t1Warm,
-      t2Warm,
       ``,
       `오늘 하루도 주님의 선하신 은혜 가운데 승리하시기를 축복합니다.`,
       endingMsg
