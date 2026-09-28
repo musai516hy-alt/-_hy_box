@@ -1,5 +1,5 @@
 // 언약교회구역모임 PWA 서비스 워커 (네트워크 우선 전략: 최신 코드 즉시 반영 + 오프라인 캐싱)
-const CACHE_NAME = 'covenant-district-v7';
+const CACHE_NAME = 'covenant-district-v8';
 const ASSETS = [
   './',
   './index.html',

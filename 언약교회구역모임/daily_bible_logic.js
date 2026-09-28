@@ -258,6 +258,7 @@ function getRomansRotationChapters(anchorCh, diffDays, count = 2) {
  */
 function renderDailyBibleView() {
   updateModeSwitcherUI();
+  updateTemplatePillsUI();
   updateDailyDateDisplay();
 
   const isD4Mode = dailyConfig.currentMode === DAILY_MODE_DISTRICT4;
@@ -319,7 +320,8 @@ function renderDistrict4Content(korDateStr) {
   }
 
   // 카카오톡 메시지 생성
-  currentKakaoMessageText = buildKakaoMessageDistrict4(passagePkg, korDateStr);
+  const d4Style = dailyConfig?.district4?.templateStyle || "grace";
+  currentKakaoMessageText = buildKakaoMessageDistrict4(passagePkg, korDateStr, d4Style);
   const textareaEl = document.getElementById("daily-kakao-preview-textarea");
   if (textareaEl) textareaEl.value = currentKakaoMessageText;
 }
@@ -382,7 +384,8 @@ function renderWomenContent(korDateStr) {
   }
 
   // 카카오톡 메시지 생성
-  currentKakaoMessageText = buildKakaoMessageWomen(track1Title, track2Title, passages, korDateStr);
+  const womenStyle = dailyConfig?.women?.templateStyle || "grace";
+  currentKakaoMessageText = buildKakaoMessageWomen(track1Title, track2Title, passages, korDateStr, womenStyle);
   const textareaEl = document.getElementById("daily-kakao-preview-textarea");
   if (textareaEl) textareaEl.value = currentKakaoMessageText;
 }
@@ -390,9 +393,47 @@ function renderWomenContent(korDateStr) {
 /**
  * 카카오톡 복사용 메시지 조립 (4구역 모드)
  */
-function buildKakaoMessageDistrict4(passagePkg, korDateStr) {
-  const summaries = passagePkg.chapterDetails.map(c => `• [${c.bookName} ${c.chapter}장] ${c.summary}`).join("\n");
+function buildKakaoMessageDistrict4(passagePkg, korDateStr, styleOverride) {
+  const style = styleOverride || dailyConfig?.district4?.templateStyle || "grace";
+  const endingMsg = "언약성도 모두가 주의 말씀으로 세워져 갈 수 있길 기도합니다. 말씀을 읽으신 후 단톡방에 '아멘' 또는 '완독'을 남겨주세요^^";
 
+  // 1. 심플형 (간결하고 정갈한 콤팩트 디자인 - 박스선 배제)
+  if (style === "simple") {
+    const summaries = passagePkg.chapterDetails.map(c => `• ${c.bookName} ${c.chapter}장: ${c.summary}`).join("\n");
+    return [
+      `🌿 [언약교회 4구역] 매일성경`,
+      ``,
+      `▪ 일시: ${korDateStr}`,
+      `▪ 본문: ${passagePkg.passageTitle}`,
+      ``,
+      `▪ 말씀 요약`,
+      summaries,
+      ``,
+      endingMsg
+    ].join("\n");
+  }
+
+  // 2. 아침문안형 (따뜻한 새 아침 축복 인사)
+  if (style === "warm") {
+    const summaries = passagePkg.chapterDetails.map(c => `• [${c.bookName} ${c.chapter}장] ${c.summary}`).join("\n");
+    return [
+      `☀️ 샬롬! 언약교회 4구역 식구 여러분,`,
+      `은혜롭고 평안한 새 아침입니다.`,
+      ``,
+      `🗓 날짜: ${korDateStr}`,
+      `📖 오늘 우리가 마음에 새길 생명의 말씀:`,
+      `【${passagePkg.passageTitle}】`,
+      ``,
+      `[말씀 요약]`,
+      summaries,
+      ``,
+      `오늘 하루도 주님의 선하신 은혜 가운데 승리하시기를 축복합니다.`,
+      endingMsg
+    ].join("\n");
+  }
+
+  // 3. 은혜나눔형 (권장 표준형)
+  const summaries = passagePkg.chapterDetails.map(c => `• [${c.bookName} ${c.chapter}장] ${c.summary}`).join("\n");
   return [
     `🌿 [언약교회 4구역] 매일 성경 읽기`,
     `━━━━━━━━━━━━━━━━━━━━`,
@@ -402,7 +443,7 @@ function buildKakaoMessageDistrict4(passagePkg, korDateStr) {
     `[📌 오늘의 성경 말씀 요약]`,
     summaries,
     ``,
-    `언약성도 모두가 주의 말씀으로 세워져 갈 수 있길 기도합니다. 말씀을 읽으신 후 단톡방에 '아멘' 또는 '완독'을 남겨주세요^^`,
+    endingMsg,
     `━━━━━━━━━━━━━━━━━━━━`
   ].join("\n");
 }
@@ -410,13 +451,57 @@ function buildKakaoMessageDistrict4(passagePkg, korDateStr) {
 /**
  * 카카오톡 복사용 메시지 조립 (언약성도 모드)
  */
-function buildKakaoMessageWomen(track1Title, track2Title, passages, korDateStr) {
+function buildKakaoMessageWomen(track1Title, track2Title, passages, korDateStr, styleOverride) {
+  const style = styleOverride || dailyConfig?.women?.templateStyle || "grace";
+  const endingMsg = "언약성도 모두가 주의 말씀으로 세워져 갈 수 있길 기도합니다. 말씀을 읽으신 후 단톡방에 '아멘' 또는 '완독'을 남겨주세요^^";
+
   const t1Details = passages.track1.map(c => getChapterInfo(c.book.name, c.chapter));
   const t2Details = passages.track2.map(c => getChapterInfo(c.book.name, c.chapter));
 
+  // 1. 심플형 (간결하고 정갈한 콤팩트 디자인 - 박스선 배제)
+  if (style === "simple") {
+    const t1Simple = t1Details.map(c => `• ${c.bookName} ${c.chapter}장: ${c.summary}`).join("\n");
+    const t2Simple = t2Details.map(c => `• ${c.bookName} ${c.chapter}장: ${c.summary}`).join("\n");
+    return [
+      `🌸 [언약교회] 언약성도 매일성경`,
+      ``,
+      `▪ 일시: ${korDateStr}`,
+      `▪ 구약 통독 본문: ${track1Title}`,
+      `▪ 신약 통독 본문: ${track2Title}`,
+      ``,
+      `▪ 말씀 요약`,
+      t1Simple,
+      t2Simple,
+      ``,
+      endingMsg
+    ].join("\n");
+  }
+
+  // 2. 아침문안형 (따뜻한 새 아침 축복 인사)
+  if (style === "warm") {
+    const t1Warm = t1Details.map(c => `• [${c.bookName} ${c.chapter}장] ${c.summary}`).join("\n");
+    const t2Warm = t2Details.map(c => `• [${c.bookName} ${c.chapter}장] ${c.summary}`).join("\n");
+    return [
+      `☀️ 샬롬! 언약교회 성도 여러분,`,
+      `은혜롭고 평안한 새 아침입니다.`,
+      ``,
+      `🗓 날짜: ${korDateStr}`,
+      `📖 오늘 우리가 마음에 새길 생명의 말씀:`,
+      `• 구약 통독 본문: ${track1Title}`,
+      `• 신약 통독 본문: ${track2Title}`,
+      ``,
+      `[말씀 요약]`,
+      t1Warm,
+      t2Warm,
+      ``,
+      `오늘 하루도 주님의 선하신 은혜 가운데 승리하시기를 축복합니다.`,
+      endingMsg
+    ].join("\n");
+  }
+
+  // 3. 은혜나눔형 (권장 표준형)
   const t1Summaries = t1Details.map(c => `• [${c.bookName} ${c.chapter}장] ${c.summary}`).join("\n");
   const t2Summaries = t2Details.map(c => `• [${c.bookName} ${c.chapter}장] ${c.summary}`).join("\n");
-
   return [
     `🌸 [언약교회] 언약성도 매일 성경 읽기`,
     `━━━━━━━━━━━━━━━━━━━━`,
@@ -430,7 +515,7 @@ function buildKakaoMessageWomen(track1Title, track2Title, passages, korDateStr) 
     `[📌 로마서 통독 요약]`,
     t2Summaries,
     ``,
-    `언약성도 모두가 주의 말씀으로 세워져 갈 수 있길 기도합니다. 말씀을 읽으신 후 단톡방에 '아멘' 또는 '완독'을 남겨주세요^^`,
+    endingMsg,
     `━━━━━━━━━━━━━━━━━━━━`
   ].join("\n");
 }
@@ -635,20 +720,32 @@ function handleDailyDatePick(event) {
  * 템플릿 스타일 변경
  */
 function changeDailyTemplateStyle(style) {
+  if (!dailyConfig) loadDailyConfig();
   if (dailyConfig.currentMode === DAILY_MODE_DISTRICT4) {
+    if (!dailyConfig.district4) dailyConfig.district4 = {};
     dailyConfig.district4.templateStyle = style;
   } else {
+    if (!dailyConfig.women) dailyConfig.women = {};
     dailyConfig.women.templateStyle = style;
   }
   saveDailyConfig();
+  updateTemplatePillsUI();
+  renderDailyBibleView();
 
-  // 템플릿 버튼 활성화 UI
+  const styleNames = { grace: "은혜나눔형", simple: "심플형", warm: "아침문안형" };
+  showToast(`💬 ${styleNames[style] || style} 양식이 적용되었습니다.`);
+}
+
+/**
+ * 템플릿 선택 버튼 UI 동기화
+ */
+function updateTemplatePillsUI() {
+  const isD4 = dailyConfig?.currentMode === DAILY_MODE_DISTRICT4;
+  const currentStyle = (isD4 ? dailyConfig?.district4?.templateStyle : dailyConfig?.women?.templateStyle) || "grace";
   const btns = document.querySelectorAll(".template-pill-btn");
   btns.forEach(b => {
-    b.classList.toggle("active", b.getAttribute("data-style") === style);
+    b.classList.toggle("active", b.getAttribute("data-style") === currentStyle);
   });
-
-  renderDailyBibleView();
 }
 
 /**
