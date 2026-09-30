@@ -48,6 +48,9 @@
         <button onclick="switchTabToDaily('women')" class="btn btn-outline btn-xs no-print" style="cursor: pointer; display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; font-weight: 700; white-space: nowrap; color: #FFF; border-color: rgba(255,255,255,0.4);">
           <span>🌸</span> 언약성도 매일성경
         </button>
+        <button onclick="forceAppUpdate()" class="btn btn-outline btn-xs no-print" style="cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 6px 8px; font-weight: 700; color: #FFF; border-color: rgba(255,255,255,0.4);" title="앱 최신버전 새로고침">
+          <span>🔄</span>
+        </button>
       </div>
     </div>
 
@@ -900,14 +903,51 @@
   </script>
 
   <script>
+    function forceAppUpdate() {
+      showToast("🔄 앱을 최신 버전으로 갱신하는 중입니다...");
+      if ('caches' in window) {
+        caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).then(() => {
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(regs => {
+              Promise.all(regs.map(r => r.unregister())).then(() => {
+                setTimeout(() => { window.location.reload(true); }, 300);
+              });
+            });
+          } else {
+            window.location.reload(true);
+          }
+        }).catch(() => { window.location.reload(true); });
+      } else {
+        window.location.reload(true);
+      }
+    }
+  </script>
+
+  <script>
     if ('serviceWorker' in navigator) {
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
+
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261001_v11')
+        navigator.serviceWorker.register('./sw.js?v=20261001_v12')
           .then(reg => {
             console.log('PWA ServiceWorker registered:', reg.scope);
             reg.update();
           })
           .catch(err => console.log('PWA ServiceWorker error:', err));
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          navigator.serviceWorker.getRegistration().then(reg => {
+            if (reg) reg.update();
+          });
+        }
       });
     }
   </script>

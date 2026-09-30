@@ -1,5 +1,5 @@
 // 원미언약교회 여성 성도 매일 성경 읽기 서비스 워커 (네트워크 우선 전략: 최신 코드 즉시 반영 + 오프라인 캐싱)
-const CACHE_NAME = 'covenant-women-bible-v3';
+const CACHE_NAME = 'covenant-women-bible-v4';
 const ASSETS = [
   './',
   './index.html',

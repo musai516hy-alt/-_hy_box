@@ -49,6 +49,9 @@
         <button class="header-btn" onclick="openSettingsModal()" title="진도 및 구역 설정">
           ⚙️ 설정
         </button>
+        <button class="header-btn" onclick="forceAppUpdate()" title="앱 최신버전 새로고침">
+          🔄
+        </button>
       </div>
     </div>
   </header>
@@ -253,14 +256,51 @@
   <script src="app.js?v=20261001_v3"></script>
 
   <script>
+    function forceAppUpdate() {
+      showToast("🔄 앱을 최신 버전으로 갱신하는 중입니다...");
+      if ('caches' in window) {
+        caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).then(() => {
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(regs => {
+              Promise.all(regs.map(r => r.unregister())).then(() => {
+                setTimeout(() => { window.location.reload(true); }, 300);
+              });
+            });
+          } else {
+            window.location.reload(true);
+          }
+        }).catch(() => { window.location.reload(true); });
+      } else {
+        window.location.reload(true);
+      }
+    }
+  </script>
+
+  <script>
     if ('serviceWorker' in navigator) {
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
+
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261001_v3')
+        navigator.serviceWorker.register('./sw.js?v=20261001_v4')
           .then(reg => {
             console.log('Women Bible PWA SW registered:', reg.scope);
             reg.update();
           })
           .catch(err => console.log('Women Bible PWA SW error:', err));
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          navigator.serviceWorker.getRegistration().then(reg => {
+            if (reg) reg.update();
+          });
+        }
       });
     }
   </script>
