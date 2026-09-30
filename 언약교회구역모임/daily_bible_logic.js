@@ -32,8 +32,8 @@ const DEFAULT_DAILY_CONFIG = {
     track1BookId: 23, // 이사야
     track1Chapter: 14,
     track1Count: 3,
-    track2AnchorDate: "2026-09-28",
-    track2Chapter: 12, // 로마서
+    track2AnchorDate: "2026-10-01", // 내일(10월 1일 목)부터 로마서 3장 시작
+    track2Chapter: 3, // 로마서 3장 (3장~4장)
     track2Count: 2,
     templateStyle: "grace"
   }
@@ -74,7 +74,20 @@ function loadDailyConfig() {
   try {
     const saved = localStorage.getItem(DAILY_CONFIG_KEY);
     if (saved) {
-      dailyConfig = { ...DEFAULT_DAILY_CONFIG, ...JSON.parse(saved) };
+      const parsed = JSON.parse(saved);
+      dailyConfig = {
+        ...DEFAULT_DAILY_CONFIG,
+        ...parsed,
+        district4: { ...DEFAULT_DAILY_CONFIG.district4, ...(parsed.district4 || {}) },
+        women: { ...DEFAULT_DAILY_CONFIG.women, ...(parsed.women || {}) }
+      };
+      // 로마서 기준일 및 시작 장수 최신화 동기화 (내일 2026-10-01부터 로마서 3장 시작)
+      if (dailyConfig.women.track2AnchorDate !== DEFAULT_DAILY_CONFIG.women.track2AnchorDate ||
+          dailyConfig.women.track2Chapter !== DEFAULT_DAILY_CONFIG.women.track2Chapter) {
+        dailyConfig.women.track2AnchorDate = DEFAULT_DAILY_CONFIG.women.track2AnchorDate;
+        dailyConfig.women.track2Chapter = DEFAULT_DAILY_CONFIG.women.track2Chapter;
+        saveDailyConfig();
+      }
     } else {
       dailyConfig = JSON.parse(JSON.stringify(DEFAULT_DAILY_CONFIG));
       saveDailyConfig();
@@ -218,17 +231,19 @@ function getDistrict4Passages(targetDate) {
  */
 function getWomenPassages(targetDate) {
   const cfg = dailyConfig.women;
-  const diffDays = getDailyDayDiff(cfg.track1AnchorDate, targetDate);
+  const track1DiffDays = getDailyDayDiff(cfg.track1AnchorDate, targetDate);
 
   // Track 1 (구약 순차 통독)
   const track1AnchorGlobal = getGlobalChapter(cfg.track1BookId, cfg.track1Chapter);
   const track1Count = cfg.track1Count || 3;
-  const track1StartGlobal = track1AnchorGlobal + (diffDays * track1Count);
+  const track1StartGlobal = track1AnchorGlobal + (track1DiffDays * track1Count);
   const track1Chapters = getConsecutiveChapters(track1StartGlobal, track1Count);
 
   // Track 2 (로마서 순환 통독)
+  const track2AnchorDate = cfg.track2AnchorDate || cfg.track1AnchorDate;
+  const track2DiffDays = getDailyDayDiff(track2AnchorDate, targetDate);
   const track2Count = cfg.track2Count || 2;
-  const track2Chapters = getRomansRotationChapters(cfg.track2Chapter, diffDays, track2Count);
+  const track2Chapters = getRomansRotationChapters(cfg.track2Chapter, track2DiffDays, track2Count);
 
   return {
     track1: track1Chapters,

@@ -19,9 +19,9 @@ const DEFAULT_CONFIG = {
   track1Chapter: 14,
   track1Count: 3,
 
-  // Track 2 (로마서): 로마서 12장 (12~13장)
-  track2AnchorDate: "2026-09-28",
-  track2Chapter: 12,
+  // Track 2 (로마서): 내일(2026-10-01)부터 로마서 3장 시작 (3~4장)
+  track2AnchorDate: "2026-10-01",
+  track2Chapter: 3,
   track2Count: 2,
 
   templateStyle: "grace", // 'grace' (은혜나눔형), 'simple' (심플형), 'warm' (따뜻한아침형)
@@ -69,6 +69,13 @@ function loadConfig() {
     const saved = localStorage.getItem(CONFIG_STORAGE_KEY);
     if (saved) {
       appConfig = { ...DEFAULT_CONFIG, ...JSON.parse(saved) };
+      // 로마서 기준일/시작 장수 갱신 동기화 (내일 2026-10-01부터 로마서 3장 시작)
+      if (appConfig.track2AnchorDate !== DEFAULT_CONFIG.track2AnchorDate ||
+          appConfig.track2Chapter !== DEFAULT_CONFIG.track2Chapter) {
+        appConfig.track2AnchorDate = DEFAULT_CONFIG.track2AnchorDate;
+        appConfig.track2Chapter = DEFAULT_CONFIG.track2Chapter;
+        saveConfig();
+      }
     } else {
       appConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
       saveConfig();
@@ -137,18 +144,20 @@ function getDayDiff(date1Str, date2Obj) {
  * 선택된 날짜의 두 가지 트랙 본문 계산
  */
 function getPassagesForDate(targetDate) {
-  const diffDays = getDayDiff(appConfig.track1AnchorDate, targetDate);
+  const track1DiffDays = getDayDiff(appConfig.track1AnchorDate, targetDate);
 
   // Track 1: 순차 통독 (기본 이사야 14장부터 3장씩)
   const track1AnchorGlobal = getGlobalChapter(appConfig.track1BookId, appConfig.track1Chapter);
   const track1Count = appConfig.track1Count || 3;
-  const track1StartGlobal = track1AnchorGlobal + (diffDays * track1Count);
+  const track1StartGlobal = track1AnchorGlobal + (track1DiffDays * track1Count);
   const track1Chapters = getTrack1Chapters(track1StartGlobal, track1Count);
   const track1Title = formatPassageRange(track1Chapters);
 
-  // Track 2: 로마서 순환 통독 (기본 로마서 12장부터 2장씩 무한 순환)
+  // Track 2: 로마서 순환 통독 (내일부터 로마서 3장 시작, 하루 2장씩 무한 순환)
+  const track2AnchorDate = appConfig.track2AnchorDate || appConfig.track1AnchorDate;
+  const track2DiffDays = getDayDiff(track2AnchorDate, targetDate);
   const track2Count = appConfig.track2Count || 2;
-  const track2Chapters = getRomansRotationChapters(appConfig.track2Chapter, diffDays, track2Count);
+  const track2Chapters = getRomansRotationChapters(appConfig.track2Chapter, track2DiffDays, track2Count);
   const track2Title = formatPassageRange(track2Chapters);
 
   return {
@@ -518,7 +527,7 @@ function openSettingsModal() {
   }
 
   document.getElementById("cfg-t1-chapter").value = appConfig.track1Chapter || 14;
-  document.getElementById("cfg-t2-chapter").value = appConfig.track2Chapter || 12;
+  document.getElementById("cfg-t2-chapter").value = appConfig.track2Chapter || 3;
 
   const memberListText = (appConfig.members || []).map(m => `${m.name} ${m.role}`).join("\n");
   document.getElementById("cfg-members-text").value = memberListText;
@@ -538,7 +547,9 @@ function saveSettingsFromModal() {
   appConfig.track1AnchorDate = document.getElementById("cfg-t1-date").value || "2026-09-28";
   appConfig.track1BookId = parseInt(document.getElementById("cfg-t1-book").value) || 23;
   appConfig.track1Chapter = parseInt(document.getElementById("cfg-t1-chapter").value) || 14;
-  appConfig.track2Chapter = parseInt(document.getElementById("cfg-t2-chapter").value) || 12;
+  appConfig.track2Chapter = parseInt(document.getElementById("cfg-t2-chapter").value) || 3;
+  // 모달에서 기준 날짜 및 시작 장수를 재지정한 경우 track2AnchorDate도 함께 동기화
+  appConfig.track2AnchorDate = appConfig.track1AnchorDate;
 
   const lines = document.getElementById("cfg-members-text").value.split("\n");
   const newMembers = [];
