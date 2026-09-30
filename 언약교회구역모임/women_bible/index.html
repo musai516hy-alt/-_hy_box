@@ -248,15 +248,18 @@
     <p>원미언약교회 여성 성도 매일 성경 읽기 솔루션 &bull; 매일 아침 복사하여 카카오톡 단톡방에 붙여넣기만 하세요.</p>
   </footer>
 
-  <script src="bible_engine.js"></script>
-  <script src="bible_summaries.js"></script>
-  <script src="app.js"></script>
+  <script src="bible_engine.js?v=20261001_v3"></script>
+  <script src="bible_summaries.js?v=20261001_v3"></script>
+  <script src="app.js?v=20261001_v3"></script>
 
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('Women Bible PWA SW registered:', reg.scope))
+        navigator.serviceWorker.register('./sw.js?v=20261001_v3')
+          .then(reg => {
+            console.log('Women Bible PWA SW registered:', reg.scope);
+            reg.update();
+          })
           .catch(err => console.log('Women Bible PWA SW error:', err));
       });
     }

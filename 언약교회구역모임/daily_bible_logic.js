@@ -9,8 +9,8 @@
 const DAILY_MODE_DISTRICT4 = 'district4';
 const DAILY_MODE_WOMEN = 'women';
 
-// 로컬 스토리지 키
-const DAILY_CONFIG_KEY = 'covenant_daily_bible_config_v2';
+// 로컬 스토리지 키 (v3: 10월 1일 로마서 3장 시작 동기화)
+const DAILY_CONFIG_KEY = 'covenant_daily_bible_config_v3';
 const DAILY_CHECKLIST_KEY = 'covenant_daily_checklist_v2';
 
 // 기본 환경 설정
@@ -72,6 +72,10 @@ function initDailyBibleModule() {
  */
 function loadDailyConfig() {
   try {
+    // 구버전(v2) 로컬스토리지 잔여물 정리
+    if (localStorage.getItem('covenant_daily_bible_config_v2')) {
+      localStorage.removeItem('covenant_daily_bible_config_v2');
+    }
     const saved = localStorage.getItem(DAILY_CONFIG_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);

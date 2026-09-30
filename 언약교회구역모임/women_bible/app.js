@@ -4,7 +4,7 @@
  * - 신약 집중 로테이션 통독 (하루 2장: 로마서 1~16장 무한 순환)
  */
 
-const CONFIG_STORAGE_KEY = 'women_bible_app_config_v1';
+const CONFIG_STORAGE_KEY = 'women_bible_app_config_v2';
 const CHECKLIST_STORAGE_KEY = 'women_bible_checklist_v1';
 
 // 기본 환경 설정
@@ -66,6 +66,9 @@ function initWomenBibleApp() {
 
 function loadConfig() {
   try {
+    if (localStorage.getItem('women_bible_app_config_v1')) {
+      localStorage.removeItem('women_bible_app_config_v1');
+    }
     const saved = localStorage.getItem(CONFIG_STORAGE_KEY);
     if (saved) {
       appConfig = { ...DEFAULT_CONFIG, ...JSON.parse(saved) };

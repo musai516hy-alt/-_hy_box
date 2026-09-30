@@ -884,10 +884,10 @@
     </div>
   </div>
 
-  <script src="bible_data.js?v=20260928_v6"></script>
-  <script src="bible_summaries.js?v=20260928_v6"></script>
-  <script src="daily_bible_logic.js?v=20260928_v6"></script>
-  <script src="app.js?v=20260928_v6"></script>
+  <script src="bible_data.js?v=20261001_v11"></script>
+  <script src="bible_summaries.js?v=20261001_v11"></script>
+  <script src="daily_bible_logic.js?v=20261001_v11"></script>
+  <script src="app.js?v=20261001_v11"></script>
 
   <script>
     function saveCustomNotes() {
@@ -902,8 +902,11 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20260928_v6')
-          .then(reg => console.log('PWA ServiceWorker registered:', reg.scope))
+        navigator.serviceWorker.register('./sw.js?v=20261001_v11')
+          .then(reg => {
+            console.log('PWA ServiceWorker registered:', reg.scope);
+            reg.update();
+          })
           .catch(err => console.log('PWA ServiceWorker error:', err));
       });
     }
