@@ -43,6 +43,7 @@ let dailyConfig = null;
 let selectedDailyDate = new Date();
 let dailyChecklists = {};
 let currentKakaoMessageText = "";
+let dailyShuffleOffset = 0;
 
 /**
  * 매일성경 모듈 초기화
@@ -110,14 +111,36 @@ function saveDailyConfig() {
 }
 
 /**
- * 체크리스트 불러오기/저장
+ * 체크리스트 불러오기/저장 (4구역 / 언약성도 모드별 완전 격리)
  */
 function loadDailyChecklists() {
   try {
     const saved = localStorage.getItem(DAILY_CHECKLIST_KEY);
-    dailyChecklists = saved ? JSON.parse(saved) : {};
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // 구버전 마이그레이션: 모드 키가 없으면 기존 데이터를 district4로 보존
+      if (parsed && typeof parsed === 'object' && !parsed[DAILY_MODE_DISTRICT4] && !parsed[DAILY_MODE_WOMEN]) {
+        dailyChecklists = {
+          [DAILY_MODE_DISTRICT4]: parsed,
+          [DAILY_MODE_WOMEN]: {}
+        };
+      } else {
+        dailyChecklists = {
+          [DAILY_MODE_DISTRICT4]: (parsed && parsed[DAILY_MODE_DISTRICT4]) || {},
+          [DAILY_MODE_WOMEN]: (parsed && parsed[DAILY_MODE_WOMEN]) || {}
+        };
+      }
+    } else {
+      dailyChecklists = {
+        [DAILY_MODE_DISTRICT4]: {},
+        [DAILY_MODE_WOMEN]: {}
+      };
+    }
   } catch (e) {
-    dailyChecklists = {};
+    dailyChecklists = {
+      [DAILY_MODE_DISTRICT4]: {},
+      [DAILY_MODE_WOMEN]: {}
+    };
   }
 }
 
@@ -308,14 +331,199 @@ function renderDailyBibleView() {
 }
 
 /**
- * 4구역 매일성경 렌더링
+ * 🔄 카카오톡 메시지 문구 다시 섞기
+ */
+function shuffleDailyKakaoMessage() {
+  dailyShuffleOffset++;
+  const isD4Mode = dailyConfig.currentMode === DAILY_MODE_DISTRICT4;
+  const korDateStr = formatKoreanDailyDate(selectedDailyDate);
+  if (isD4Mode) {
+    renderDistrict4Content(korDateStr);
+  } else {
+    renderWomenContent(korDateStr);
+  }
+  showToast("🔄 새로운 추천 문구로 재조합되었습니다.");
+}
+
+/**
+ * 날짜 기반 결정론적 시드 번호 산출 (당일 동일 문구 유지)
+ */
+function getDailySeed(date) {
+  const dObj = date || new Date();
+  const y = dObj.getFullYear();
+  const m = dObj.getMonth() + 1;
+  const d = dObj.getDate();
+  return (y * 365 + m * 31 + d) >>> 0;
+}
+
+/**
+ * 4대 절기 자동 감지 배너 (부활절, 추수감사주일, 성탄절, 송구영신)
+ */
+function detectSpecialSeason(date) {
+  const m = date.getMonth() + 1;
+  const d = date.getDate();
+
+  // 1. 성탄절 (12월 24일 ~ 12월 25일)
+  if (m === 12 && (d === 24 || d === 25)) {
+    return {
+      badge: "🎄 [성탄의 축복]",
+      message: "우리를 구원하시기 위해 이 땅에 낮아져 오신 아기 예수님의 크신 사랑과 하늘의 평화가 성도님들의 가정과 삶에 가득하시기를 축복합니다."
+    };
+  }
+
+  // 2. 송구영신 (12월 31일 ~ 1월 1일)
+  if ((m === 12 && d === 31) || (m === 1 && d === 1)) {
+    return {
+      badge: "🌅 [송구영신]",
+      message: "지나온 한 해를 주님의 신실하신 은혜로 아름답게 매듭짓고, 변함없는 주의 언약의 말씀과 함께 새해를 믿음과 소망으로 힘차게 출발합니다."
+    };
+  }
+
+  // 3. 추수감사주일 (11월 셋째 주간: 11월 15일 ~ 11월 21일)
+  if (m === 11 && d >= 15 && d <= 21) {
+    return {
+      badge: "🌾 [추수감사]",
+      message: "올 한 해도 우리의 모든 삶을 선한 길로 인도하시고 풍성한 은혜와 결실로 채워주신 에벤에셀 하나님께 마음 깊이 감사와 영광을 드립니다."
+    };
+  }
+
+  // 4. 부활절 (매년 봄 부활 주간 - 2026년 기준 4월 5일 부활 주간)
+  const y = date.getFullYear();
+  const isEasterWeek2026 = (y === 2026 && ((m === 3 && d >= 30) || (m === 4 && d <= 5)));
+  if (isEasterWeek2026) {
+    return {
+      badge: "🕊️ [부활의 소망]",
+      message: "사망 권세를 깨뜨리시고 다시 살아나신 우리 주 예수 그리스도의 영원한 부활 생명과 승리의 능력이 성도님들의 심령 위에 충만하시길 기도합니다."
+    };
+  }
+
+  return null;
+}
+
+/**
+ * 요일별 맞춤 축복 & 권면 문구 모음
+ */
+const DAY_OF_WEEK_GREETINGS = {
+  // 0: 일요일
+  0: [
+    "거룩하고 복된 주일, 공예배를 통해 부어주실 하늘의 큰 은혜와 감격을 사모합니다.",
+    "주의 날에 함께 모여 하나님을 찬양하며 말씀으로 하나 되는 기쁨의 날입니다.",
+    "예배의 감격과 함께 말씀을 마음에 새기며 영혼의 깊은 안식을 누리는 주일 되세요."
+  ],
+  // 1: 월요일
+  1: [
+    "새로운 한 주의 첫걸음, 생명의 말씀으로 활기차고 담대하게 출발합니다.",
+    "월요일 아침, 하나님의 신실하신 약속을 굳게 붙잡고 믿음으로 승리하세요.",
+    "주의 말씀이 이번 한 주간 우리의 생각과 걸음을 환하게 비추어 주실 것입니다."
+  ],
+  // 2: 화요일
+  2: [
+    "화요일의 일상 속에서도 주의 평강과 기쁨이 성도님의 삶에 가득하시기를 축복합니다.",
+    "오늘도 말씀의 거울 앞에 나를 비추며 주님과 동행하는 은혜의 하루 되세요.",
+    "우리의 호흡과 발걸음마다 주님의 선하신 손길이 늘 함께하심을 믿습니다."
+  ],
+  // 3: 수요일
+  3: [
+    "분주한 주중의 삶 한가운데서 영혼을 맑게 채우는 생수의 말씀입니다.",
+    "수요일, 지친 일상을 잠시 내려놓고 말씀 안에서 참된 쉼과 새 힘을 얻으시길 바랍니다.",
+    "주님을 앙망하는 자에게 독수리 날개 치며 올라감 같은 새 능력을 더하여 주십니다."
+  ],
+  // 4: 목요일
+  4: [
+    "말씀을 묵상하며 세상 속에서 거룩한 빛과 소금으로 살아가는 복된 목요일 되세요.",
+    "믿음의 든든한 반석 위에 우리의 생각과 가정을 굳게 세워가는 하루입니다.",
+    "보이지 않아도 우리를 위해 가장 선한 길을 예비하시는 신실하신 주님을 신뢰합니다."
+  ],
+  // 5: 금요일
+  5: [
+    "한 주간을 감사함으로 돌아보며 말씀 앞에 머무는 평안한 금요일입니다.",
+    "은혜 가운데 한 주를 잘 매듭짓고, 다가오는 주일을 기대함으로 준비합니다.",
+    "우리 삶에 새겨진 하나님의 은혜의 흔적들을 헤아리며 찬양을 올려드립니다."
+  ],
+  // 6: 토요일
+  6: [
+    "내일 주일 공예배의 큰 은혜를 사모하며 정결한 마음으로 말씀을 묵상합니다.",
+    "한 주 동안 인도해 주신 하나님께 감사하며, 복된 안식과 회복의 주일을 맞이해요.",
+    "주님의 거룩한 날을 준비하는 토요일, 말씀과 함께 평안하고 고요한 쉼을 누리세요."
+  ]
+};
+
+/**
+ * 날마다 다채롭게 순환되는 말씀 격려 한마디
+ */
+const DAILY_ENCOURAGEMENTS = [
+  "오늘 하루도 말씀이 우리의 기준이 되고 기도가 우리의 호흡이 되길 축복합니다.",
+  "살아있고 활력 있는 주의 말씀이 우리의 심령과 삶을 온전하게 회복시키십니다.",
+  "세상의 분주함 속에서도 말씀 앞에 머무는 10분이 우리의 하루를 변화시킵니다.",
+  "우리의 연약함을 아시는 주님께서 오늘도 넉넉한 은혜와 평강으로 붙들어 주십니다.",
+  "작은 순종의 발걸음마다 주님의 크신 사랑과 인도하심이 풍성하게 임할 것입니다.",
+  "주의 법을 사랑하는 자에게는 큰 평안이 있으니 아무것도 흔들 수 없습니다.",
+  "말씀의 깊은 뿌리를 내릴 때 어떤 가뭄과 시련 속에서도 푸른 잎사귀를 냅니다."
+];
+
+/**
+ * 4구역 통독 이정표(Milestone) 감지 (성경 권 전환 및 누적 진도율)
+ */
+function getDistrict4Milestone(chaptersList, targetDate) {
+  if (!chaptersList || chaptersList.length === 0) return null;
+
+  const firstCh = chaptersList[0];
+  const lastCh = chaptersList[chaptersList.length - 1];
+  const cfg = dailyConfig.district4;
+  const diffDays = getDailyDayDiff(cfg.anchorDate, targetDate);
+  const count = cfg.dailyChapters || 3;
+  const anchorGlobal = getGlobalChapter(cfg.anchorBookId, cfg.anchorChapter);
+  const currentEndGlobal = anchorGlobal + (diffDays * count) + count - 1;
+  const totalBibleChapters = 1189;
+  const progressPercent = Math.min(100, Math.max(0, ((currentEndGlobal / totalBibleChapters) * 100))).toFixed(1);
+
+  let bookChangeNotice = null;
+  // 당일 읽기 중 성경 권이 바뀌는 경우
+  if (firstCh.book.id !== lastCh.book.id) {
+    bookChangeNotice = `📌 [통독 이정표] 오늘 [${firstCh.book.name}]를 완독하고 [${lastCh.book.name}]을 새롭게 출발합니다!`;
+  } else {
+    // 어제 본문과의 책 전환 확인
+    const yesterdayDate = new Date(targetDate);
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterdayChapters = getDistrict4Passages(yesterdayDate);
+    if (yesterdayChapters && yesterdayChapters.length > 0) {
+      const yLast = yesterdayChapters[yesterdayChapters.length - 1];
+      if (yLast.book.id !== firstCh.book.id) {
+        bookChangeNotice = `📌 [통독 이정표] 오늘부터 [${firstCh.book.name}] 통독이 새롭게 시작됩니다!`;
+      }
+    }
+  }
+
+  return {
+    bookChangeNotice,
+    progressText: `📊 [통독 진도] 전체 성경 1,189장 중 ${currentEndGlobal}장 통독 완료 (${progressPercent}%)`
+  };
+}
+
+/**
+ * 언약성도 통독 이정표 감지
+ */
+function getWomenMilestone(passages) {
+  if (!passages || !passages.track2 || passages.track2.length === 0) return null;
+
+  const t2 = passages.track2;
+  // 로마서 1장이 포함된 날 (16장 완독 후 순환 재시작)
+  const startsRomans1 = t2.some(c => c.chapter === 1);
+  if (startsRomans1) {
+    return `📌 [통독 이정표] 로마서 16장 전장을 완독하고 새 마음으로 1장부터 다시 출발합니다!`;
+  }
+  return null;
+}
+
+/**
+ * 4구역 매일성경 렌더링 (요약 카드 완전 배제, 다이나믹 메시지 연동)
  */
 function renderDistrict4Content(korDateStr) {
   const chaptersList = getDistrict4Passages(selectedDailyDate);
-  const passagePkg = generateDailyPassagePackage(chaptersList);
+  const passageTitle = formatPassageRange(chaptersList);
 
   const titleEl = document.getElementById("daily-passage-range-title");
-  if (titleEl) titleEl.innerText = passagePkg.passageTitle;
+  if (titleEl) titleEl.innerText = passageTitle;
 
   const pillsEl = document.getElementById("daily-chapter-pills");
   if (pillsEl) {
@@ -324,29 +532,15 @@ function renderDistrict4Content(korDateStr) {
     `).join("");
   }
 
-  // 장별 요약 카드 렌더링 (줄거리 요약만 표시)
-  const summaryEl = document.getElementById("daily-summary-cards-container");
-  if (summaryEl) {
-    summaryEl.innerHTML = passagePkg.chapterDetails.map(c => `
-      <div class="summary-item-card">
-        <div class="summary-item-header">
-          <span class="summary-badge">${c.bookName} ${c.chapter}장</span>
-          <span class="summary-title">${c.title}</span>
-        </div>
-        <p class="summary-desc">${c.summary}</p>
-      </div>
-    `).join("");
-  }
-
   // 카카오톡 메시지 생성
   const d4Style = dailyConfig?.district4?.templateStyle || "grace";
-  currentKakaoMessageText = buildKakaoMessageDistrict4(passagePkg, korDateStr, d4Style);
+  currentKakaoMessageText = buildKakaoMessageDistrict4(passageTitle, chaptersList, korDateStr, d4Style, selectedDailyDate);
   const textareaEl = document.getElementById("daily-kakao-preview-textarea");
   if (textareaEl) textareaEl.value = currentKakaoMessageText;
 }
 
 /**
- * 여성성경 더블트랙 렌더링
+ * 여성성경 더블트랙 렌더링 (요약 카드 완전 배제, 다이나믹 메시지 연동)
  */
 function renderWomenContent(korDateStr) {
   const passages = getWomenPassages(selectedDailyDate);
@@ -373,118 +567,141 @@ function renderWomenContent(korDateStr) {
     `).join("");
   }
 
-  // 장별 요약 카드 렌더링
-  const summaryEl = document.getElementById("women-summary-cards-container");
-  if (summaryEl) {
-    const t1Details = passages.track1.map(c => getChapterInfo(c.book.name, c.chapter));
-    const t2Details = passages.track2.map(c => getChapterInfo(c.book.name, c.chapter));
-
-    const html1 = t1Details.map(c => `
-      <div class="summary-item-card">
-        <div class="summary-item-header">
-          <span class="summary-badge">${c.bookName} ${c.chapter}장</span>
-          <span class="summary-title">${c.title}</span>
-        </div>
-        <p class="summary-desc">${c.summary}</p>
-      </div>
-    `).join("");
-
-    const html2 = t2Details.map(c => `
-      <div class="summary-item-card card-romans">
-        <div class="summary-item-header">
-          <span class="summary-badge badge-romans">${c.bookName} ${c.chapter}장</span>
-          <span class="summary-title">${c.title}</span>
-        </div>
-        <p class="summary-desc">${c.summary}</p>
-      </div>
-    `).join("");
-
-    summaryEl.innerHTML = html1 + html2;
-  }
-
   // 카카오톡 메시지 생성
   const womenStyle = dailyConfig?.women?.templateStyle || "grace";
-  currentKakaoMessageText = buildKakaoMessageWomen(track1Title, track2Title, passages, korDateStr, womenStyle);
+  currentKakaoMessageText = buildKakaoMessageWomen(track1Title, track2Title, passages, korDateStr, womenStyle, selectedDailyDate);
   const textareaEl = document.getElementById("daily-kakao-preview-textarea");
   if (textareaEl) textareaEl.value = currentKakaoMessageText;
 }
 
 /**
- * 카카오톡 복사용 메시지 조립 (4구역 모드)
+ * 카카오톡 복사용 메시지 조립 (4구역 모드 - 다이나믹 감성 엔진)
  */
-function buildKakaoMessageDistrict4(passagePkg, korDateStr, styleOverride) {
+function buildKakaoMessageDistrict4(passageTitle, chaptersList, korDateStr, styleOverride, targetDate) {
+  const dateObj = targetDate || selectedDailyDate;
   const style = styleOverride || dailyConfig?.district4?.templateStyle || "grace";
   const endingMsg = "언약성도 모두가 주의 말씀으로 세워져 갈 수 있길 기도합니다. 말씀을 읽으신 후 단톡방에 '아멘' 또는 '완독'을 남겨주세요^^";
 
-  // 1. 심플형 (간결하고 정갈한 콤팩트 디자인 - 말씀요약 배제)
+  const baseSeed = getDailySeed(dateObj);
+  const dayOfWeek = dateObj.getDay();
+  const dayGreetings = DAY_OF_WEEK_GREETINGS[dayOfWeek] || DAY_OF_WEEK_GREETINGS[1];
+  const dayGreeting = dayGreetings[(baseSeed + dailyShuffleOffset) % dayGreetings.length];
+  const encouragement = DAILY_ENCOURAGEMENTS[(baseSeed + dailyShuffleOffset * 2) % DAILY_ENCOURAGEMENTS.length];
+  const holiday = detectSpecialSeason(dateObj);
+  const milestone = getDistrict4Milestone(chaptersList, dateObj);
+
+  // 1. 심플형 (간결하고 콤팩트한 디자인)
   if (style === "simple") {
-    return [
+    const lines = [
       `🌿 [언약교회 4구역] 매일성경`,
       ``,
       `▪ 일시: ${korDateStr}`,
-      `▪ 본문: ${passagePkg.passageTitle}`,
-      ``,
-      endingMsg
-    ].join("\n");
+      `▪ 본문: ${passageTitle}`
+    ];
+    if (holiday) {
+      lines.push(``, `${holiday.badge} ${holiday.message}`);
+    } else if (milestone && milestone.bookChangeNotice) {
+      lines.push(``, milestone.bookChangeNotice);
+    }
+    lines.push(``, endingMsg);
+    return lines.join("\n");
   }
 
-  // 2. 아침문안형 (따뜻한 새 아침 축복 인사 - 말씀요약 배제)
+  // 2. 아침문안형 (따뜻한 아침 축복 인사)
   if (style === "warm") {
-    return [
+    const lines = [
       `☀️ 샬롬! 언약교회 4구역 식구 여러분,`,
       `은혜롭고 평안한 새 아침입니다.`,
       ``,
       `🗓 날짜: ${korDateStr}`,
       `📖 오늘 우리가 마음에 새길 생명의 말씀:`,
-      `【${passagePkg.passageTitle}】`,
+      `【${passageTitle}】`,
+      ``,
+      dayGreeting
+    ];
+    if (holiday) {
+      lines.push(``, `${holiday.badge} ${holiday.message}`);
+    }
+    if (milestone && milestone.bookChangeNotice) {
+      lines.push(``, milestone.bookChangeNotice);
+    }
+    lines.push(
       ``,
       `오늘 하루도 주님의 선하신 은혜 가운데 승리하시기를 축복합니다.`,
       endingMsg
-    ].join("\n");
+    );
+    return lines.join("\n");
   }
 
-  // 3. 은혜나눔형 (권장 표준형)
-  const summaries = passagePkg.chapterDetails.map(c => `• [${c.bookName} ${c.chapter}장] ${c.summary}`).join("\n");
-  return [
+  // 3. 은혜나눔형 (권장 표준형: 감성 인사 + 이정표 + 격려 문구)
+  const lines = [
     `🌿 [언약교회 4구역] 매일 성경 읽기`,
     `━━━━━━━━━━━━━━━━━━━━`,
     `🗓️ 날짜: ${korDateStr}`,
-    `📖 본문: ${passagePkg.passageTitle}`,
+    `📖 본문: ${passageTitle}`,
     ``,
-    `[📌 오늘의 성경 말씀 요약]`,
-    summaries,
+    `✨ ${dayGreeting}`
+  ];
+
+  if (holiday) {
+    lines.push(``, `${holiday.badge} ${holiday.message}`);
+  }
+
+  if (milestone) {
+    if (milestone.bookChangeNotice) {
+      lines.push(``, milestone.bookChangeNotice);
+    }
+    lines.push(``, milestone.progressText);
+  }
+
+  lines.push(
+    ``,
+    `💬 ${encouragement}`,
     ``,
     endingMsg,
     `━━━━━━━━━━━━━━━━━━━━`
-  ].join("\n");
+  );
+
+  return lines.join("\n");
 }
 
 /**
- * 카카오톡 복사용 메시지 조립 (언약성도 모드)
+ * 카카오톡 복사용 메시지 조립 (언약성도 모드 - 다이나믹 감성 엔진)
  */
-function buildKakaoMessageWomen(track1Title, track2Title, passages, korDateStr, styleOverride) {
+function buildKakaoMessageWomen(track1Title, track2Title, passages, korDateStr, styleOverride, targetDate) {
+  const dateObj = targetDate || selectedDailyDate;
   const style = styleOverride || dailyConfig?.women?.templateStyle || "grace";
   const endingMsg = "언약성도 모두가 주의 말씀으로 세워져 갈 수 있길 기도합니다. 말씀을 읽으신 후 단톡방에 '아멘' 또는 '완독'을 남겨주세요^^";
 
-  const t1Details = passages.track1.map(c => getChapterInfo(c.book.name, c.chapter));
-  const t2Details = passages.track2.map(c => getChapterInfo(c.book.name, c.chapter));
+  const baseSeed = getDailySeed(dateObj);
+  const dayOfWeek = dateObj.getDay();
+  const dayGreetings = DAY_OF_WEEK_GREETINGS[dayOfWeek] || DAY_OF_WEEK_GREETINGS[1];
+  const dayGreeting = dayGreetings[(baseSeed + dailyShuffleOffset) % dayGreetings.length];
+  const encouragement = DAILY_ENCOURAGEMENTS[(baseSeed + dailyShuffleOffset * 2) % DAILY_ENCOURAGEMENTS.length];
+  const holiday = detectSpecialSeason(dateObj);
+  const milestoneNotice = getWomenMilestone(passages);
 
-  // 1. 심플형 (간결하고 정갈한 콤팩트 디자인 - 말씀요약 배제)
+  // 1. 심플형
   if (style === "simple") {
-    return [
+    const lines = [
       `🌸 [언약교회] 언약성도 매일성경`,
       ``,
       `▪ 일시: ${korDateStr}`,
       `▪ 구약 통독 본문: ${track1Title}`,
-      `▪ 신약 통독 본문: ${track2Title}`,
-      ``,
-      endingMsg
-    ].join("\n");
+      `▪ 신약 통독 본문: ${track2Title}`
+    ];
+    if (holiday) {
+      lines.push(``, `${holiday.badge} ${holiday.message}`);
+    } else if (milestoneNotice) {
+      lines.push(``, milestoneNotice);
+    }
+    lines.push(``, endingMsg);
+    return lines.join("\n");
   }
 
-  // 2. 아침문안형 (따뜻한 새 아침 축복 인사 - 말씀요약 배제)
+  // 2. 아침문안형
   if (style === "warm") {
-    return [
+    const lines = [
       `☀️ 샬롬! 언약교회 성도 여러분,`,
       `은혜롭고 평안한 새 아침입니다.`,
       ``,
@@ -493,30 +710,50 @@ function buildKakaoMessageWomen(track1Title, track2Title, passages, korDateStr, 
       `• 구약 통독 본문: ${track1Title}`,
       `• 신약 통독 본문: ${track2Title}`,
       ``,
+      dayGreeting
+    ];
+    if (holiday) {
+      lines.push(``, `${holiday.badge} ${holiday.message}`);
+    }
+    if (milestoneNotice) {
+      lines.push(``, milestoneNotice);
+    }
+    lines.push(
+      ``,
       `오늘 하루도 주님의 선하신 은혜 가운데 승리하시기를 축복합니다.`,
       endingMsg
-    ].join("\n");
+    );
+    return lines.join("\n");
   }
 
   // 3. 은혜나눔형 (권장 표준형)
-  const t1Summaries = t1Details.map(c => `• [${c.bookName} ${c.chapter}장] ${c.summary}`).join("\n");
-  const t2Summaries = t2Details.map(c => `• [${c.bookName} ${c.chapter}장] ${c.summary}`).join("\n");
-  return [
+  const lines = [
     `🌸 [언약교회] 언약성도 매일 성경 읽기`,
     `━━━━━━━━━━━━━━━━━━━━`,
     `🗓️ 날짜: ${korDateStr}`,
     `📖 1. 구약 통독 본문: ${track1Title}`,
     `📖 2. 신약 통독 본문: ${track2Title}`,
     ``,
-    `[📌 구약 통독 요약]`,
-    t1Summaries,
+    `✨ ${dayGreeting}`
+  ];
+
+  if (holiday) {
+    lines.push(``, `${holiday.badge} ${holiday.message}`);
+  }
+
+  if (milestoneNotice) {
+    lines.push(``, milestoneNotice);
+  }
+
+  lines.push(
     ``,
-    `[📌 로마서 통독 요약]`,
-    t2Summaries,
+    `💬 ${encouragement}`,
     ``,
     endingMsg,
     `━━━━━━━━━━━━━━━━━━━━`
-  ].join("\n");
+  );
+
+  return lines.join("\n");
 }
 
 /**
@@ -584,13 +821,18 @@ function shareDailyKakaoDirect() {
 }
 
 /**
- * 구역원 완독 체크보드 렌더링
+ * 구역원 완독 체크보드 렌더링 (4구역 / 언약성도 모드별 분리)
  */
 function renderDailyMemberCheckboard(dateKey) {
   const boardEl = document.getElementById("daily-member-checklist-grid");
   if (!boardEl) return;
 
-  const currentChecklist = dailyChecklists[dateKey] || {};
+  const currentMode = dailyConfig?.currentMode || DAILY_MODE_DISTRICT4;
+  if (!dailyChecklists[currentMode]) {
+    dailyChecklists[currentMode] = {};
+  }
+  const currentChecklist = dailyChecklists[currentMode][dateKey] || {};
+
   // 메인 appData의 members 활용, 없을 경우 기본값
   const members = (window.appData && window.appData.members) ? window.appData.members : [
     { id: 1, name: "손혜영" },
@@ -605,7 +847,8 @@ function renderDailyMemberCheckboard(dateKey) {
   const checkedCount = members.filter(m => !!currentChecklist[m.id]).length;
   const countEl = document.getElementById("daily-checklist-count-display");
   if (countEl) {
-    countEl.innerText = `${checkedCount} / ${members.length}명 완독`;
+    const modeName = currentMode === DAILY_MODE_DISTRICT4 ? "4구역" : "언약성도";
+    countEl.innerText = `[${modeName}] ${checkedCount} / ${members.length}명 완독`;
   }
 
   boardEl.innerHTML = members.map(m => {
@@ -623,55 +866,93 @@ function renderDailyMemberCheckboard(dateKey) {
 }
 
 /**
- * 식구 완독 토글 & 축하 효과
+ * 식구 완독 토글 & 4구역/언약성도 모드별 통독 연동
  */
 function toggleDailyMemberCheck(memberId) {
+  const currentMode = dailyConfig?.currentMode || DAILY_MODE_DISTRICT4;
   const dateKey = formatDailyDateKey(selectedDailyDate);
-  if (!dailyChecklists[dateKey]) {
-    dailyChecklists[dateKey] = {};
+
+  if (!dailyChecklists[currentMode]) {
+    dailyChecklists[currentMode] = {};
+  }
+  if (!dailyChecklists[currentMode][dateKey]) {
+    dailyChecklists[currentMode][dateKey] = {};
   }
 
-  const newState = !dailyChecklists[dateKey][memberId];
-  dailyChecklists[dateKey][memberId] = newState;
+  const newState = !dailyChecklists[currentMode][dateKey][memberId];
+  dailyChecklists[currentMode][dateKey][memberId] = newState;
   saveDailyChecklists();
+
+  // 당일 모드별 읽은 장수 및 본문 파트 산출
+  let chaptersToday = 0;
+  let targetParts = [];
+
+  if (currentMode === DAILY_MODE_DISTRICT4) {
+    chaptersToday = dailyConfig?.district4?.dailyChapters || 3;
+    const chaptersList = getDistrict4Passages(selectedDailyDate);
+    const passageTitle = formatPassageRange(chaptersList);
+    if (passageTitle) {
+      targetParts = [passageTitle];
+    }
+  } else {
+    // 언약성도 모드 (구약 track1 + 로마서 track2 = 5장)
+    const t1Count = dailyConfig?.women?.track1Count || 3;
+    const t2Count = dailyConfig?.women?.track2Count || 2;
+    chaptersToday = t1Count + t2Count;
+
+    const passages = getWomenPassages(selectedDailyDate);
+    const track1Title = formatPassageRange(passages.track1);
+    const track2Title = formatPassageRange(passages.track2);
+    if (track1Title) targetParts.push(track1Title);
+    if (track2Title) targetParts.push(track2Title);
+  }
+
+  if (window.appData && Array.isArray(window.appData.members)) {
+    // 깊은 복사로 안전하게 새 배열 생성하여 참조 얽힘 원천 차단
+    window.appData.members = window.appData.members.map(m => {
+      if (m.id === memberId) {
+        const newWeekly = (m.weeklyChapters || 0) + (newState ? chaptersToday : -chaptersToday);
+        const newTotal = (m.totalAccumulated || 0) + (newState ? chaptersToday : -chaptersToday);
+
+        // 본문 텍스트 연동: 추가 또는 제거 (무결성 보장)
+        let parts = (m.weeklyPassage || "").split(", ").map(s => s.trim()).filter(Boolean);
+        if (newState) {
+          targetParts.forEach(p => {
+            if (p && !parts.includes(p)) {
+              parts.push(p);
+            }
+          });
+        } else {
+          parts = parts.filter(p => !targetParts.includes(p));
+        }
+
+        return {
+          ...m,
+          weeklyChapters: Math.max(0, newWeekly),
+          totalAccumulated: Math.max(0, newTotal),
+          weeklyPassage: parts.join(", ")
+        };
+      }
+      return { ...m };
+    });
+  }
+
   renderDailyMemberCheckboard(dateKey);
   renderDailyReadingProgress();
 
-  const members = (window.appData && window.appData.members) ? window.appData.members : [];
-  const member = members.find(m => m.id === memberId);
+  const member = window.appData?.members?.find(m => m.id === memberId);
   const memberName = member ? member.name : "성도";
+  const modeTitle = currentMode === DAILY_MODE_DISTRICT4 ? "4구역 매일성경" : "언약성도 매일성경";
 
   if (newState) {
-    showToast(`🎉 ${memberName} 성도님 오늘 말씀 완독 완료!`);
+    showToast(`🎉 ${memberName} 성도님 [${modeTitle}] 완독 완료!`);
     triggerCelebrationConfetti();
-
-    // 메인 구역모임 앱 통독 누적과 연동 (선택적 동기화)
-    if (window.appData && window.appData.members) {
-      const m = window.appData.members.find(x => x.id === memberId);
-      if (m) {
-        // 일일 분량 가산 (4구역 3장, 여성성도 5장)
-        const chaptersToday = (dailyConfig.currentMode === DAILY_MODE_DISTRICT4) ? 3 : 5;
-        m.weeklyChapters = (m.weeklyChapters || 0) + chaptersToday;
-        m.totalAccumulated = (m.totalAccumulated || 0) + chaptersToday;
-        if (typeof window.saveData === 'function') window.saveData();
-        if (typeof window.renderAll === 'function') window.renderAll();
-      }
-    }
   } else {
-    showToast(`${memberName} 성도님 완독 체크가 해제되었습니다.`);
-    
-    // 체크 해제 시 차감 연동
-    if (window.appData && window.appData.members) {
-      const m = window.appData.members.find(x => x.id === memberId);
-      if (m) {
-        const chaptersToday = (dailyConfig.currentMode === DAILY_MODE_DISTRICT4) ? 3 : 5;
-        m.weeklyChapters = Math.max(0, (m.weeklyChapters || 0) - chaptersToday);
-        m.totalAccumulated = Math.max(0, (m.totalAccumulated || 0) - chaptersToday);
-        if (typeof window.saveData === 'function') window.saveData();
-        if (typeof window.renderAll === 'function') window.renderAll();
-      }
-    }
+    showToast(`${memberName} 성도님 [${modeTitle}] 완독 체크가 해제되었습니다.`);
   }
+
+  if (typeof window.saveData === 'function') window.saveData();
+  if (typeof window.renderAll === 'function') window.renderAll();
 }
 
 /**

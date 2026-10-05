@@ -211,11 +211,6 @@
                 <!-- JS 렌더링 -->
               </div>
             </div>
-
-            <!-- 장별 요약 카드 목록 -->
-            <div id="daily-summary-cards-container">
-              <!-- JS 렌더링 -->
-            </div>
           </div>
 
           <!-- 원미 여성성경 모드 본문 영역 (기본 숨김) -->
@@ -243,11 +238,6 @@
                 <!-- JS 렌더링 -->
               </div>
             </div>
-
-            <!-- 장별 요약 카드 목록 -->
-            <div id="women-summary-cards-container">
-              <!-- JS 렌더링 -->
-            </div>
           </div>
         </div>
 
@@ -259,11 +249,16 @@
               <div style="font-weight: 800; font-size: 1.05rem; color: #78350F; display: flex; align-items: center; gap: 6px;">
                 <span>💬</span> 단톡방 나눔 메시지 원클릭 생성
               </div>
-              <!-- 템플릿 스타일 선택 버튼 -->
-              <div class="template-pills-row" style="margin-bottom: 0;">
-                <button type="button" class="template-pill-btn active" data-style="grace" onclick="changeDailyTemplateStyle('grace')">🌿 은혜나눔형</button>
-                <button type="button" class="template-pill-btn" data-style="simple" onclick="changeDailyTemplateStyle('simple')">⚡ 심플형</button>
-                <button type="button" class="template-pill-btn" data-style="warm" onclick="changeDailyTemplateStyle('warm')">☀️ 아침문안형</button>
+              <!-- 템플릿 스타일 선택 버튼 & 문구 다시 섞기 버튼 -->
+              <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <div class="template-pills-row" style="margin-bottom: 0;">
+                  <button type="button" class="template-pill-btn active" data-style="grace" onclick="changeDailyTemplateStyle('grace')">🌿 은혜나눔형</button>
+                  <button type="button" class="template-pill-btn" data-style="simple" onclick="changeDailyTemplateStyle('simple')">⚡ 심플형</button>
+                  <button type="button" class="template-pill-btn" data-style="warm" onclick="changeDailyTemplateStyle('warm')">☀️ 아침문안형</button>
+                </div>
+                <button type="button" class="btn btn-outline btn-xs" onclick="shuffleDailyKakaoMessage()" title="다른 추천 문구로 재조합" style="font-weight: 700; background: #FFFBEB; border-color: #FCD34D; color: #B45309; padding: 4px 8px; border-radius: 9999px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;">
+                  <span>🔄</span> 다시 섞기
+                </button>
               </div>
             </div>
 
@@ -376,9 +371,10 @@
               <h2 class="card-title" style="margin: 0; line-height: 1.3;"><span>📊</span> 구역 식구별 이번 주 통독 & 연간 1독 달성률</h2>
               <div id="weekly-reading-date-range" style="font-size: 0.85rem; font-weight: 700; color: var(--accent-gold); margin-top: 6px;">이번 주 통독 기간: -</div>
             </div>
-            <button class="btn btn-outline btn-sm" onclick="resetWeeklyReading()" style="font-size: 0.75rem; white-space: nowrap;">
-              🔄 주간 초기화 (다음 주로)
-            </button>
+            <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end;">
+              <label for="weekly-start-date-picker" style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">🔄 주간 초기화 (시작일 변경):</label>
+              <input type="date" id="weekly-start-date-picker" class="form-input" style="padding: 4px 8px; font-size: 0.8rem; border-color: var(--accent-gold); max-width: 140px; cursor: pointer;" onchange="changeWeeklyStartDate(this.value)">
+            </div>
           </div>
           <div style="display: flex; gap: 16px; font-size: 0.9rem; width: 100%;">
             <span>이번 주 합계: <strong style="color: var(--sage-green);" id="reading-weekly-sum">0장</strong></span>
@@ -716,16 +712,21 @@
       </div>
       <div class="modal-body">
         <input type="hidden" id="edit-mentor-member-id">
-        <div class="form-group">
-          <label class="form-label">📖 현재진도</label>
-          <input type="text" id="edit-mentor-course" class="form-input" placeholder="예: 요한복음 1장 1~14절">
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label class="form-label" style="font-weight: 700; color: var(--primary); margin-bottom: 6px;">📖 성경본문</label>
+          <div class="modal-grid-2col">
+            <div>
+              <label class="form-label" style="font-size: 0.8rem; color: var(--accent-gold); margin-bottom: 4px;">📍 현재 진도</label>
+              <input type="text" id="edit-mentor-course" class="form-input" placeholder="예: 요한복음 1장 1~14절">
+            </div>
+            <div>
+              <label class="form-label" style="font-size: 0.8rem; color: var(--sky-blue); margin-bottom: 4px;">⏩ 다음 진도</label>
+              <input type="text" id="edit-mentor-lesson" class="form-input" placeholder="예: 로마서 3장">
+            </div>
+          </div>
         </div>
         <div class="form-group">
-          <label class="form-label">다음진도</label>
-          <input type="text" id="edit-mentor-lesson" class="form-input" placeholder="예: 로마서 3장">
-        </div>
-        <div class="form-group">
-          <label class="form-label">기타사항</label>
+          <label class="form-label" style="font-weight: 700; color: var(--primary);">📝 기타사항</label>
           <input type="text" id="edit-mentor-assignment" class="form-input" placeholder="예: 말씀 구절 암송 및 묵상 등 특이사항 기재">
         </div>
       </div>
@@ -746,9 +747,9 @@
       <div class="modal-body">
         <input type="hidden" id="log-mentor-member-id">
         <div class="form-group">
-          <label class="form-label">성경공부나눔</label>
-          <textarea id="log-mentor-text" class="form-textarea" rows="5"
-            placeholder="오늘 나눈 핵심 말씀 은혜, 구역원의 질문, 기도제목, 삶의 결단 등을 적어주세요."></textarea>
+          <label class="form-label" style="font-weight: 700; color: var(--primary);">💬 성경공부 나눔 및 기도제목</label>
+          <textarea id="log-mentor-text" class="form-textarea" rows="6"
+            placeholder="오늘 나눈 핵심 말씀 은혜, 성경 질문, 성도님의 기도제목, 삶의 결단 등을 적어주세요."></textarea>
         </div>
       </div>
       <div class="modal-footer">
@@ -866,10 +867,9 @@
     </div>
   </div>
 
-  <script src="bible_data.js?v=20261001_v11"></script>
-  <script src="bible_summaries.js?v=20261001_v11"></script>
-  <script src="daily_bible_logic.js?v=20261001_v11"></script>
-  <script src="app.js?v=20261001_v11"></script>
+  <script src="bible_data.js?v=20261005_v20"></script>
+  <script src="daily_bible_logic.js?v=20261005_v20"></script>
+  <script src="app.js?v=20261005_v20"></script>
 
   <script>
     function saveCustomNotes() {
@@ -913,7 +913,7 @@
       });
 
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=20261001_v12')
+        navigator.serviceWorker.register('./sw.js?v=20261005_v20')
           .then(reg => {
             console.log('PWA ServiceWorker registered:', reg.scope);
             reg.update();

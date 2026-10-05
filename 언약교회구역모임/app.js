@@ -15,13 +15,13 @@ const DEFAULT_DATA = {
     noMeeting: false
   },
   members: [
-    { id: 1, name: "손혜영", role: "구역장", attended: true, weeklyPassage: "열왕기상 10-12장", weeklyChapters: 3, totalAccumulated: 303, prayers: [], isMentoringTarget: false },
-    { id: 2, name: "권가람", role: "부구역장", attended: true, weeklyPassage: "열왕기상 10-12장", weeklyChapters: 3, totalAccumulated: 303, prayers: [], isMentoringTarget: false },
-    { id: 3, name: "모점례", role: "구역원", attended: true, weeklyPassage: "열왕기상 10-12장", weeklyChapters: 3, totalAccumulated: 303, prayers: [], isMentoringTarget: false },
-    { id: 4, name: "이경숙", role: "구역원", attended: true, weeklyPassage: "열왕기상 10-12장", weeklyChapters: 3, totalAccumulated: 303, prayers: [], isMentoringTarget: false },
-    { id: 5, name: "손영란", role: "구역원", attended: true, weeklyPassage: "열왕기상 10-12장", weeklyChapters: 3, totalAccumulated: 303, prayers: [], isMentoringTarget: false },
-    { id: 6, name: "권수아", role: "구역원", attended: true, weeklyPassage: "열왕기상 10-12장", weeklyChapters: 3, totalAccumulated: 303, prayers: [], isMentoringTarget: false },
-    { id: 7, name: "육선경", role: "구역원", attended: true, weeklyPassage: "열왕기상 10-12장", weeklyChapters: 3, totalAccumulated: 303, prayers: [], isMentoringTarget: false }
+    { id: 1, name: "손혜영", role: "구역장", attended: true, weeklyPassage: "", weeklyChapters: 0, totalAccumulated: 303, prayers: [], isMentoringTarget: false },
+    { id: 2, name: "권가람", role: "부구역장", attended: true, weeklyPassage: "", weeklyChapters: 0, totalAccumulated: 303, prayers: [], isMentoringTarget: false },
+    { id: 3, name: "모점례", role: "구역원", attended: true, weeklyPassage: "", weeklyChapters: 0, totalAccumulated: 303, prayers: [], isMentoringTarget: false },
+    { id: 4, name: "이경숙", role: "구역원", attended: true, weeklyPassage: "", weeklyChapters: 0, totalAccumulated: 303, prayers: [], isMentoringTarget: false },
+    { id: 5, name: "손영란", role: "구역원", attended: true, weeklyPassage: "", weeklyChapters: 0, totalAccumulated: 303, prayers: [], isMentoringTarget: false },
+    { id: 6, name: "권수아", role: "구역원", attended: true, weeklyPassage: "", weeklyChapters: 0, totalAccumulated: 303, prayers: [], isMentoringTarget: false },
+    { id: 7, name: "육선경", role: "구역원", attended: true, weeklyPassage: "", weeklyChapters: 0, totalAccumulated: 303, prayers: [], isMentoringTarget: false }
   ],
   reportHeader: "샬롬! 목사님, 이번 주 구역 사역 및 모임 결과를 보고드립니다.",
   reportFooter: "구역 식구들 모두 말씀과 기도로 든든히 세워져 가고 있습니다. 목사님의 영육 강건하심을 위해 기도합니다.",
@@ -80,6 +80,17 @@ function loadData() {
           }
         });
       }
+      // 기존 모든 멤버에게 똑같이 들어있던 구버전 더미 데이터 정리
+      if (appData.members && Array.isArray(appData.members)) {
+        const allSameLegacy = appData.members.every(m => m.weeklyPassage === "열왕기상 10-12장" && m.weeklyChapters === 3);
+        if (allSameLegacy) {
+          appData.members.forEach(m => {
+            m.weeklyPassage = "";
+            m.weeklyChapters = 0;
+          });
+          needsSave = true;
+        }
+      }
       if (needsSave) {
         saveData();
       }
@@ -91,11 +102,13 @@ function loadData() {
     console.error("데이터 로드 실패:", e);
     appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
   }
+  window.appData = appData;
 }
 
 function saveData() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+    window.appData = appData;
   } catch (e) {
     console.error("데이터 저장 실패:", e);
   }
@@ -268,17 +281,31 @@ function getWeeklyDateRangeStr() {
   return `이번 주 통독 기간: ${fmt(startDate)} ~ ${fmt(endDate)}`;
 }
 
-function resetWeeklyReading() {
-  if (!confirm("목사님께 이번 주 구역 사역 보고를 완료하셨나요?\\n\\n'확인'을 누르시면 이번 주 통독 기간이 다음 주로 넘어가며, 모든 식구들의 '이번 주 통독 장수' 데이터가 0장으로 초기화됩니다.\\n(연간 누적 장수는 그대로 안전하게 유지됩니다)")) {
+function changeWeeklyStartDate(dateStr) {
+  if (!dateStr) return;
+  const newDate = new Date(dateStr);
+  const day = newDate.getDay();
+  
+  if (day !== 0) {
+    if (!confirm("선택하신 날짜가 '일요일'이 아닙니다. (보통 주간 통독은 일요일부터 시작합니다)\\n이대로 주간을 설정하시겠습니까?")) {
+      // Revert date picker to current week
+      if (appData.weeklyStartDate) {
+        document.getElementById('weekly-start-date-picker').value = appData.weeklyStartDate.split('T')[0];
+      }
+      return;
+    }
+  }
+  
+  if (!confirm("선택하신 주간으로 변경하고, 모든 식구들의 '이번 주 통독 기록(장수, 본문)'을 0장/빈칸으로 초기화하시겠습니까?\\n(연간 누적 장수는 안전하게 유지됩니다)")) {
+    if (appData.weeklyStartDate) {
+      document.getElementById('weekly-start-date-picker').value = appData.weeklyStartDate.split('T')[0];
+    }
     return;
   }
   
-  // Advance the week by 7 days
-  const startDate = new Date(appData.weeklyStartDate);
-  startDate.setDate(startDate.getDate() + 7);
-  appData.weeklyStartDate = startDate.toISOString();
+  appData.weeklyStartDate = newDate.toISOString();
   
-  // Reset all members' weekly chapters
+  // Reset all members' weekly chapters and passage
   if (appData.members) {
     appData.members.forEach(m => {
       m.weeklyChapters = 0;
@@ -288,7 +315,7 @@ function resetWeeklyReading() {
   
   if (typeof saveData === 'function') saveData();
   if (typeof renderAll === 'function') renderAll();
-  showToast("다음 주로 통독 주간이 변경되었으며, 데이터가 초기화되었습니다.");
+  showToast("새로운 주간으로 설정되었으며, 주간 데이터가 초기화되었습니다.");
 }
 
 function renderReadingTab() {
@@ -304,6 +331,12 @@ function renderReadingTab() {
   const dateRangeEl = document.getElementById('weekly-reading-date-range');
   if (dateRangeEl) {
     dateRangeEl.innerText = getWeeklyDateRangeStr();
+  }
+  
+  const datePicker = document.getElementById('weekly-start-date-picker');
+  if (datePicker && appData.weeklyStartDate) {
+    // YYYY-MM-DD 포맷으로 변환하여 세팅
+    datePicker.value = appData.weeklyStartDate.split('T')[0];
   }
 
   const listEl = document.getElementById('reading-member-list');
@@ -513,34 +546,93 @@ function renderMentoringTab() {
   }
 
   container.innerHTML = mentorees.map(m => {
+    const historyList = Array.isArray(m.mentoringHistory) ? m.mentoringHistory : [];
+    const hasHistory = historyList.length > 0;
+    const historyHtml = hasHistory ? historyList.map(h => `
+      <div class="mentor-history-item">
+        <span style="font-weight: 700; color: var(--accent-gold);">${h.date || '이전'}:</span> ${h.note || ''}
+      </div>
+    `).join('') : '';
+
     return `
       <div class="mentor-card">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px;">
-          <div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="mentor-badge" style="background: var(--sky-blue); color: #fff; padding: 4px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: 700;">일대일 성경공부</span>
-              <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--primary);">${m.name} ${m.role}</h3>
+        <!-- 상단 헤더: 대상자 정보 -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="mentor-badge">일대일 성경공부</span>
+            <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--primary); margin: 0;">${m.name} ${m.role}</h3>
+          </div>
+        </div>
+
+        <!-- 1. 성경본문: 현재 진도 / 다음 진도 (카드에서 직접 입력 & 자동 저장) -->
+        <div class="mentor-passage-container">
+          <div class="mentor-section-label">
+            <span>📖 성경본문</span>
+            <span style="font-size: 0.76rem; color: var(--text-muted); font-weight: 500;">(입력 후 자동 저장됩니다)</span>
+          </div>
+          <div class="mentor-passage-grid">
+            <div class="mentor-passage-col current">
+              <span class="col-label">📍 현재 진도</span>
+              <input type="text" class="mentor-inline-input" 
+                     id="inline-course-${m.id}" 
+                     value="${m.mentoringCourse || ''}" 
+                     placeholder="현재 진도 입력 (예: 요한복음 1장 1~14절)"
+                     onchange="updateMentoringInlinePassage(${m.id})">
             </div>
-            <div style="font-size: 0.9rem; color: var(--accent-gold); font-weight: 600; margin-top: 6px;">
-              📖 현재진도: <strong>${m.mentoringCourse || '미정'}</strong> / 다음진도: <strong>${m.mentoringLesson || '미정'}</strong>
+            <button type="button" class="btn-advance-lesson" onclick="advanceMentoringLesson(${m.id})" title="다음 진도를 현재 진도로 완료 처리하고 다음 진도를 비웁니다">
+              <span>✅ 완료</span>
+            </button>
+            <div class="mentor-passage-col next">
+              <span class="col-label">⏩ 다음 진도</span>
+              <input type="text" class="mentor-inline-input" 
+                     id="inline-lesson-${m.id}" 
+                     value="${m.mentoringLesson || ''}" 
+                     placeholder="다음 진도 입력 (예: 요한복음 2장)"
+                     onchange="updateMentoringInlinePassage(${m.id})">
             </div>
           </div>
         </div>
 
-        <div style="background: var(--bg-card-subtle); padding: 12px 16px; border-radius: var(--radius-md); margin-bottom: 12px; font-size: 0.88rem;">
-          <div>📝 <strong>기타사항:</strong> ${m.mentoringAssignment || '없음'}</div>
-        </div>
-
+        <!-- 2. 성경공부 나눔 및 기도제목 -->
         <div class="mentor-review-box">
-          <div style="font-weight: 700; color: var(--accent-gold); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-            💡 <span>직전 회차 핵심 나눔 복기 (만나기 5분 전 꼭 읽기)</span>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-weight: 700; color: var(--accent-gold); display: flex; align-items: center; gap: 6px;">
+              💬 <span>성경공부 나눔 및 기도제목</span>
+            </span>
+            <span class="note-date-badge">${m.lastMentoringDate ? `📅 ${m.lastMentoringDate} 기록` : '최근 기록'}</span>
           </div>
-          <div style="color: var(--text-main); line-height: 1.6;">${m.lastMentoringNote || '기록된 나눔 내용이 없습니다.'}</div>
+          <div style="color: var(--text-main); line-height: 1.6; white-space: pre-wrap;">${m.lastMentoringNote || '기록된 나눔 일지가 없습니다. [나눔 일지 작성]을 눌러 기록해 주세요.'}</div>
+          
+          ${hasHistory ? `
+            <button type="button" class="mentor-history-toggle" onclick="toggleMentorHistory(${m.id})">
+              <span>📜 이전 나눔 기록 (${historyList.length}건) ▼</span>
+            </button>
+            <div id="mentor-history-${m.id}" style="display: none; margin-top: 6px;">
+              ${historyHtml}
+            </div>
+          ` : ''}
         </div>
 
-        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
-          <button class="btn btn-outline btn-sm" onclick="openMentoringEditModal(${m.id})">일정 및 진도 수정</button>
-          <button class="btn btn-gold btn-sm" onclick="openMentoringLogModal(${m.id})">나눔 일지 작성</button>
+        <!-- 3. 기타사항 (카드에서 직접 입력 & 자동 저장) -->
+        <div class="mentor-assignment-box">
+          <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted); margin-bottom: 6px;">
+            📝 <strong>기타사항</strong>
+          </div>
+          <input type="text" class="mentor-inline-input" 
+                 id="inline-assignment-${m.id}" 
+                 value="${m.mentoringAssignment || ''}" 
+                 placeholder="암송 구절, 과제 점검 등 특이사항을 적어주세요."
+                 onchange="updateMentoringInlineAssignment(${m.id})">
+        </div>
+
+        <!-- 하단 액션 버튼 바 -->
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+          <button class="btn btn-outline btn-sm" style="border-color: #25D366; color: #128C7E;" onclick="copyMentoringKakaoMessage(${m.id})">
+            <span>💬 성도 카톡 복사</span>
+          </button>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-gold btn-sm" onclick="openMentoringLogModal(${m.id})">나눔 일지 작성</button>
+          </div>
         </div>
       </div>
     `;
@@ -575,7 +667,8 @@ function generateReportText() {
 
   const mentorees = appData.members.filter(m => m.isMentoringTarget);
   const mentoringLines = mentorees.length > 0 ? mentorees.map(m => {
-    return `   · 대상: ${m.name} ${m.role}\n     - 현재진도: ${m.mentoringCourse || '미정'}\n     - 다음진도: ${m.mentoringLesson || '미정'}\n     - 기타사항: ${m.mentoringAssignment || '없음'}\n     - 최근 나눔: ${m.lastMentoringNote || '말씀 묵상 및 기도'}`;
+    const dateStr = m.lastMentoringDate ? ` (${m.lastMentoringDate} 기록)` : '';
+    return `   · 대상: ${m.name} ${m.role}\n     - 성경본문: 현재진도(${m.mentoringCourse || '미정'}) / 다음진도(${m.mentoringLesson || '미정'})\n     - 성경공부 나눔 및 기도제목${dateStr}: ${m.lastMentoringNote || '말씀 묵상 및 기도'}\n     - 기타사항: ${m.mentoringAssignment || '없음'}`;
   }).join('\n') : '   · 현재 진행 중인 대상 없음';
 
   const meetingSection = isNoMeeting ? 
@@ -801,6 +894,20 @@ function bindEvents() {
     calcStartCh.addEventListener('input', updateCalc);
     calcEndBook.addEventListener('change', updateCalc);
     calcEndCh.addEventListener('input', updateCalc);
+  }
+
+  // URL 파라미터에 따른 초기 탭 또는 모드 전환 (?tab=daily-bible&mode=women)
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    const modeParam = urlParams.get('mode');
+    if (tabParam === 'daily-bible' || tabParam === 'tab-daily-bible') {
+      setTimeout(() => {
+        switchTabToDaily(modeParam === 'women' ? 'women' : 'district4');
+      }, 50);
+    }
+  } catch (e) {
+    console.error("URL 파라미터 처리 에러:", e);
   }
 }
 
@@ -1087,36 +1194,99 @@ function saveEditedPrayer() {
   showToast(`✅ [${member.name}] 님의 기도제목이 수정되었습니다.`);
 }
 
-function openMentoringEditModal(memberId) {
+function updateMentoringInlinePassage(memberId) {
   const member = appData.members.find(m => m.id === memberId);
   if (!member) return;
 
-  document.getElementById('edit-mentor-member-id').value = member.id;
-  document.getElementById('edit-mentor-name').innerText = `${member.name} ${member.role}`;
-  document.getElementById('edit-mentor-course').value = member.mentoringCourse || '';
-  document.getElementById('edit-mentor-lesson').value = member.mentoringLesson || '';
-  document.getElementById('edit-mentor-date').value = member.nextMentoringDate || '';
-  document.getElementById('edit-mentor-loc').value = member.nextMentoringLocation || '';
-  document.getElementById('edit-mentor-assignment').value = member.mentoringAssignment || '';
+  const courseEl = document.getElementById(`inline-course-${memberId}`);
+  const lessonEl = document.getElementById(`inline-lesson-${memberId}`);
 
-  openModal('modal-mentoring-edit');
-}
-
-function saveMentoringEdit() {
-  const memberId = parseInt(document.getElementById('edit-mentor-member-id').value);
-  const member = appData.members.find(m => m.id === memberId);
-  if (!member) return;
-
-  member.mentoringCourse = document.getElementById('edit-mentor-course').value.trim();
-  member.mentoringLesson = document.getElementById('edit-mentor-lesson').value.trim();
-  member.nextMentoringDate = document.getElementById('edit-mentor-date').value;
-  member.nextMentoringLocation = document.getElementById('edit-mentor-loc').value.trim();
-  member.mentoringAssignment = document.getElementById('edit-mentor-assignment').value.trim();
+  if (courseEl) member.mentoringCourse = courseEl.value.trim();
+  if (lessonEl) member.mentoringLesson = lessonEl.value.trim();
 
   saveData();
+  showToast(`💾 [${member.name}] 성도님 성경본문 진도가 자동 저장되었습니다.`);
+}
+
+function updateMentoringInlineAssignment(memberId) {
+  const member = appData.members.find(m => m.id === memberId);
+  if (!member) return;
+
+  const assignEl = document.getElementById(`inline-assignment-${memberId}`);
+  if (assignEl) member.mentoringAssignment = assignEl.value.trim();
+
+  saveData();
+  showToast(`💾 [${member.name}] 성도님 기타사항이 자동 저장되었습니다.`);
+}
+
+function advanceMentoringLesson(memberId) {
+  const member = appData.members.find(m => m.id === memberId);
+  if (!member) return;
+
+  // 인라인 입력창 값 동기화 (값이 비어있지 않은 경우에만 우선 반영)
+  const courseEl = document.getElementById(`inline-course-${memberId}`);
+  const lessonEl = document.getElementById(`inline-lesson-${memberId}`);
+  if (courseEl && courseEl.value && courseEl.value.trim()) member.mentoringCourse = courseEl.value.trim();
+  if (lessonEl && lessonEl.value && lessonEl.value.trim()) member.mentoringLesson = lessonEl.value.trim();
+
+  if (!member.mentoringLesson || member.mentoringLesson.trim() === '' || member.mentoringLesson === '미정') {
+    alert("다음 진도가 입력되어 있지 않습니다. [다음 진도] 칸에 본문을 먼저 입력해 주세요.");
+    if (lessonEl && typeof lessonEl.focus === 'function') lessonEl.focus();
+    return;
+  }
+
+  const nextLesson = member.mentoringLesson.trim();
+  if (!confirm(`[${member.name}] 성도님의 현재 진도를 '${nextLesson}'(으)로 완료 처리하고 다음 진도를 준비하시겠습니까?`)) {
+    return;
+  }
+
+  member.mentoringCourse = nextLesson;
+  member.mentoringLesson = "";
+  saveData();
   renderAll();
-  closeModal('modal-mentoring-edit');
-  showToast("1:1 양육 일정이 갱신되었습니다.");
+  showToast(`🎉 [${member.name}] 성도님 진도가 '${nextLesson}'(으)로 갱신되었습니다!`);
+}
+
+function toggleMentorHistory(memberId) {
+  const el = document.getElementById(`mentor-history-${memberId}`);
+  if (!el) return;
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function copyMentoringKakaoMessage(memberId) {
+  const member = appData.members.find(m => m.id === memberId);
+  if (!member) return;
+
+  const currentPassage = member.mentoringCourse || '미정';
+  const nextPassage = member.mentoringLesson || '미정';
+  const assignment = member.mentoringAssignment || '말씀 묵상 및 기도';
+  const note = member.lastMentoringNote || '말씀 안에서 든든히 세워져 가길 축복합니다.';
+
+  const lines = [
+    `📖 [언약교회 일대일 성경공부]`,
+    `샬롬! ${member.name} ${member.role}님, 한 주간도 주님의 은혜 안에서 평안하시길 축복합니다.`,
+    ``,
+    `▪ 성경본문 현재진도: ${currentPassage}`,
+    `▪ 다음 진도: ${nextPassage}`,
+    `▪ 기타사항: ${assignment}`,
+    ``,
+    `[함께 나눈 말씀 & 기도제목]`,
+    `${note}`,
+    ``,
+    `말씀을 마음에 품고 승리하는 복된 날 되세요! ^^`
+  ];
+
+  const fullText = lines.join('\n');
+
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(fullText).then(() => {
+      showToast(`📋 [${member.name}] 성도님께 전송할 카톡 메시지가 복사되었습니다!`);
+    }).catch(() => {
+      showToast(`📋 카톡 메시지가 복사되었습니다.`);
+    });
+  } else {
+    showToast(`📋 카톡 메시지가 준비되었습니다.`);
+  }
 }
 
 function openMentoringTargetModal() {
@@ -1184,7 +1354,23 @@ function saveMentoringLog() {
 
   const note = document.getElementById('log-mentor-text').value.trim();
 
-  if (note) member.lastMentoringNote = note;
+  if (note) {
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}.${String(today.getMonth()+1).padStart(2,'0')}.${String(today.getDate()).padStart(2,'0')}`;
+
+    // 이전 기록이 있고 새 내용과 다르면 히스토리에 보존
+    if (member.lastMentoringNote && member.lastMentoringNote !== note) {
+      if (!Array.isArray(member.mentoringHistory)) member.mentoringHistory = [];
+      member.mentoringHistory.unshift({
+        date: member.lastMentoringDate || todayStr,
+        note: member.lastMentoringNote
+      });
+      member.mentoringHistory = member.mentoringHistory.slice(0, 10);
+    }
+
+    member.lastMentoringNote = note;
+    member.lastMentoringDate = todayStr;
+  }
 
   saveData();
   renderAll();
@@ -1198,33 +1384,11 @@ function openMentoringEditModal(memberId) {
 
   document.getElementById('edit-mentor-member-id').value = member.id;
   document.getElementById('edit-mentor-name').innerText = `${member.name} ${member.role}`;
-  document.getElementById('edit-mentor-course').value = member.mentoringCourse || '성경 말씀';
+  document.getElementById('edit-mentor-course').value = member.mentoringCourse || '';
   document.getElementById('edit-mentor-lesson').value = member.mentoringLesson || '';
-
-  if (member.nextMentoringDate && member.nextMentoringDate.includes('T')) {
-    const parts = member.nextMentoringDate.split('T');
-    const dateEl = document.getElementById('edit-mentor-date-only');
-    const timeEl = document.getElementById('edit-mentor-time-only');
-    if (dateEl) dateEl.value = parts[0];
-    if (timeEl) timeEl.value = parts[1].slice(0, 5);
-  } else {
-    const nextWeek = new Date();
-    nextWeek.setDate(nextWeek.getDate() + 7);
-    const dateEl = document.getElementById('edit-mentor-date-only');
-    const timeEl = document.getElementById('edit-mentor-time-only');
-    if (dateEl) dateEl.value = nextWeek.toISOString().slice(0, 10);
-    if (timeEl) timeEl.value = '14:00';
-  }
-
-  document.getElementById('edit-mentor-loc').value = member.nextMentoringLocation || '교회예배당';
   document.getElementById('edit-mentor-assignment').value = member.mentoringAssignment || '';
 
   openModal('modal-mentoring-edit');
-}
-
-function setMentorTimePreset(timeStr) {
-  const el = document.getElementById('edit-mentor-time-only');
-  if (el) el.value = timeStr;
 }
 
 function saveMentoringEdit() {
