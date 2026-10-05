@@ -468,11 +468,6 @@ function renderMentoringTab() {
   }
 
   container.innerHTML = mentorees.map(m => {
-    const dday = calculateDDay(m.nextMentoringDate);
-    const dateObj = new Date(m.nextMentoringDate);
-    const dateStr = isNaN(dateObj) ? (m.nextMentoringDate || '일정 미정') : 
-      `${dateObj.getFullYear()}년 ${dateObj.getMonth()+1}월 ${dateObj.getDate()}일 (${['일','월','화','수','목','금','토'][dateObj.getDay()]}) ${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
-
     return `
       <div class="mentor-card">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px;">
@@ -482,19 +477,13 @@ function renderMentoringTab() {
               <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--primary);">${m.name} ${m.role}</h3>
             </div>
             <div style="font-size: 0.9rem; color: var(--accent-gold); font-weight: 600; margin-top: 6px;">
-              📖 성경본문: <strong>${m.mentoringCourse || '성경 말씀'}</strong> / 현재 진도: <strong>${m.mentoringLesson || '미정'}</strong>
+              📖 현재진도: <strong>${m.mentoringCourse || '미정'}</strong> / 다음진도: <strong>${m.mentoringLesson || '미정'}</strong>
             </div>
           </div>
-          <span class="dday-pill" style="min-width: 80px; font-size: 1.1rem; padding: 8px 14px;">
-            ${dday.text}
-            <small>다음 만남</small>
-          </span>
         </div>
 
         <div style="background: var(--bg-card-subtle); padding: 12px 16px; border-radius: var(--radius-md); margin-bottom: 12px; font-size: 0.88rem;">
-          <div>🗓️ <strong>다음 모임 일정:</strong> ${dateStr}</div>
-          <div style="margin-top: 4px;">📍 <strong>장소:</strong> ${m.nextMentoringLocation || '교회예배당'}</div>
-          <div style="margin-top: 4px;">📝 <strong>과제 점검:</strong> ${m.mentoringAssignment || '없음'}</div>
+          <div>📝 <strong>기타사항:</strong> ${m.mentoringAssignment || '없음'}</div>
         </div>
 
         <div class="mentor-review-box">
@@ -541,7 +530,7 @@ function generateReportText() {
 
   const mentorees = appData.members.filter(m => m.isMentoringTarget);
   const mentoringLines = mentorees.length > 0 ? mentorees.map(m => {
-    return `   · 대상: ${m.name} ${m.role} (성경본문: ${m.mentoringCourse || '성경 말씀'})\n     - 현재 진도: ${m.mentoringLesson || '진행 중'}\n     - 모임장소: ${m.nextMentoringLocation || '교회예배당'}\n     - 최근 나눔: ${m.lastMentoringNote || '말씀 묵상 및 기도'}`;
+    return `   · 대상: ${m.name} ${m.role}\n     - 현재진도: ${m.mentoringCourse || '미정'}\n     - 다음진도: ${m.mentoringLesson || '미정'}\n     - 기타사항: ${m.mentoringAssignment || '없음'}\n     - 최근 나눔: ${m.lastMentoringNote || '말씀 묵상 및 기도'}`;
   }).join('\n') : '   · 현재 진행 중인 대상 없음';
 
   const meetingSection = isNoMeeting ? 
@@ -1138,8 +1127,7 @@ function openMentoringLogModal(memberId) {
 
   document.getElementById('log-mentor-member-id').value = member.id;
   document.getElementById('log-mentor-name').innerText = `${member.name} ${member.role}`;
-  document.getElementById('log-mentor-text').value = '';
-  document.getElementById('log-mentor-next-lesson').value = '';
+  document.getElementById('log-mentor-text').value = member.lastMentoringNote || '';
 
   openModal('modal-mentoring-log');
 }
@@ -1150,10 +1138,8 @@ function saveMentoringLog() {
   if (!member) return;
 
   const note = document.getElementById('log-mentor-text').value.trim();
-  const nextLesson = document.getElementById('log-mentor-next-lesson').value.trim();
 
   if (note) member.lastMentoringNote = note;
-  if (nextLesson) member.mentoringLesson = nextLesson;
 
   saveData();
   renderAll();
@@ -1201,16 +1187,8 @@ function saveMentoringEdit() {
   const member = appData.members.find(m => m.id === memberId);
   if (!member) return;
 
-  member.mentoringCourse = document.getElementById('edit-mentor-course').value.trim() || '성경 말씀';
+  member.mentoringCourse = document.getElementById('edit-mentor-course').value.trim();
   member.mentoringLesson = document.getElementById('edit-mentor-lesson').value.trim();
-
-  const dateVal = document.getElementById('edit-mentor-date-only').value;
-  const timeVal = document.getElementById('edit-mentor-time-only').value || '14:00';
-  if (dateVal) {
-    member.nextMentoringDate = `${dateVal}T${timeVal}`;
-  }
-
-  member.nextMentoringLocation = document.getElementById('edit-mentor-loc').value.trim() || '교회예배당';
   member.mentoringAssignment = document.getElementById('edit-mentor-assignment').value.trim();
 
   saveData();

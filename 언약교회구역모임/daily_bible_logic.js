@@ -649,13 +649,28 @@ function toggleDailyMemberCheck(memberId) {
     if (window.appData && window.appData.members) {
       const m = window.appData.members.find(x => x.id === memberId);
       if (m) {
-        // 일일 분량(3장)을 주간 통독에 누적 가산 안내
+        // 일일 분량 가산 (4구역 3장, 여성성도 5장)
         const chaptersToday = (dailyConfig.currentMode === DAILY_MODE_DISTRICT4) ? 3 : 5;
-        // 사용자에게 부담주지 않고 자연스럽게 주간 통독 합산에 반영할 수 있는 상태 유지
+        m.weeklyChapters = (m.weeklyChapters || 0) + chaptersToday;
+        m.totalAccumulated = (m.totalAccumulated || 0) + chaptersToday;
+        if (typeof window.saveData === 'function') window.saveData();
+        if (typeof window.renderAll === 'function') window.renderAll();
       }
     }
   } else {
     showToast(`${memberName} 성도님 완독 체크가 해제되었습니다.`);
+    
+    // 체크 해제 시 차감 연동
+    if (window.appData && window.appData.members) {
+      const m = window.appData.members.find(x => x.id === memberId);
+      if (m) {
+        const chaptersToday = (dailyConfig.currentMode === DAILY_MODE_DISTRICT4) ? 3 : 5;
+        m.weeklyChapters = Math.max(0, (m.weeklyChapters || 0) - chaptersToday);
+        m.totalAccumulated = Math.max(0, (m.totalAccumulated || 0) - chaptersToday);
+        if (typeof window.saveData === 'function') window.saveData();
+        if (typeof window.renderAll === 'function') window.renderAll();
+      }
+    }
   }
 }
 

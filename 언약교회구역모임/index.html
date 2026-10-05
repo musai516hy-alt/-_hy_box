@@ -709,41 +709,16 @@
       <div class="modal-body">
         <input type="hidden" id="edit-mentor-member-id">
         <div class="form-group">
-          <label class="form-label">📖 성경본문</label>
-          <input type="text" id="edit-mentor-course" class="form-input" placeholder="예: 요한복음 1장 1~14절 또는 로마서">
+          <label class="form-label">📖 현재진도</label>
+          <input type="text" id="edit-mentor-course" class="form-input" placeholder="예: 요한복음 1장 1~14절">
         </div>
         <div class="form-group">
-          <label class="form-label">현재 진도</label>
-          <input type="text" id="edit-mentor-lesson" class="form-input" placeholder="예: 3과 말씀의 능력">
+          <label class="form-label">다음진도</label>
+          <input type="text" id="edit-mentor-lesson" class="form-input" placeholder="예: 로마서 3장">
         </div>
         <div class="form-group">
-          <label class="form-label">🗓️ 다음 모임일정</label>
-          <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 8px;">
-            <div>
-              <label style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">📅 월별 달력 날짜 지정</label>
-              <input type="date" id="edit-mentor-date-only" class="form-input" style="font-weight: 600; cursor: pointer;">
-            </div>
-            <div>
-              <label style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">⏰ 모임 시간 지정</label>
-              <input type="time" id="edit-mentor-time-only" class="form-input" style="font-weight: 600; cursor: pointer;">
-            </div>
-          </div>
-          <div style="display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; align-items: center;">
-            <span style="font-size: 0.75rem; color: var(--text-muted);">빠른 시간:</span>
-            <button type="button" class="btn btn-outline btn-xs" onclick="setMentorTimePreset('10:00')">오전 10:00</button>
-            <button type="button" class="btn btn-outline btn-xs" onclick="setMentorTimePreset('11:30')">오전 11:30</button>
-            <button type="button" class="btn btn-outline btn-xs" onclick="setMentorTimePreset('13:30')">오후 1:30</button>
-            <button type="button" class="btn btn-outline btn-xs" onclick="setMentorTimePreset('15:00')">오후 3:00</button>
-            <button type="button" class="btn btn-outline btn-xs" onclick="setMentorTimePreset('19:30')">저녁 7:30</button>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">다음 모임 장소</label>
-          <input type="text" id="edit-mentor-loc" class="form-input" value="교회예배당" placeholder="예: 교회예배당">
-        </div>
-        <div class="form-group">
-          <label class="form-label">과제 점검 내용</label>
-          <input type="text" id="edit-mentor-assignment" class="form-input" placeholder="예: 말씀 구절 암송 및 묵상">
+          <label class="form-label">기타사항</label>
+          <input type="text" id="edit-mentor-assignment" class="form-input" placeholder="예: 말씀 구절 암송 및 묵상 등 특이사항 기재">
         </div>
       </div>
       <div class="modal-footer">
@@ -766,10 +741,6 @@
           <label class="form-label">성경공부나눔</label>
           <textarea id="log-mentor-text" class="form-textarea" rows="5"
             placeholder="오늘 나눈 핵심 말씀 은혜, 구역원의 질문, 기도제목, 삶의 결단 등을 적어주세요."></textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label">다음 회차 진도 ('성경본문')</label>
-          <input type="text" id="log-mentor-next-lesson" class="form-input" placeholder="예: 4과: 말씀과 기도 (성경본문: 딤후 3:16)">
         </div>
       </div>
       <div class="modal-footer">
