@@ -251,6 +251,46 @@ function toggleAttendance(memberId) {
   showToast(`${member.name} 님의 출석 상태가 업데이트되었습니다.`);
 }
 
+function getWeeklyDateRangeStr() {
+  if (!appData.weeklyStartDate) {
+    const d = new Date();
+    d.setDate(d.getDate() - d.getDay()); // Go to Sunday
+    d.setHours(0,0,0,0);
+    appData.weeklyStartDate = d.toISOString();
+    if (typeof saveData === 'function') saveData();
+  }
+  const startDate = new Date(appData.weeklyStartDate);
+  const endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + 6);
+  
+  const fmt = (date) => `${date.getFullYear()}.${String(date.getMonth()+1).padStart(2,'0')}.${String(date.getDate()).padStart(2,'0')}(${['일','월','화','수','목','금','토'][date.getDay()]})`;
+  
+  return `이번 주 통독 기간: ${fmt(startDate)} ~ ${fmt(endDate)}`;
+}
+
+function resetWeeklyReading() {
+  if (!confirm("목사님께 이번 주 구역 사역 보고를 완료하셨나요?\\n\\n'확인'을 누르시면 이번 주 통독 기간이 다음 주로 넘어가며, 모든 식구들의 '이번 주 통독 장수' 데이터가 0장으로 초기화됩니다.\\n(연간 누적 장수는 그대로 안전하게 유지됩니다)")) {
+    return;
+  }
+  
+  // Advance the week by 7 days
+  const startDate = new Date(appData.weeklyStartDate);
+  startDate.setDate(startDate.getDate() + 7);
+  appData.weeklyStartDate = startDate.toISOString();
+  
+  // Reset all members' weekly chapters
+  if (appData.members) {
+    appData.members.forEach(m => {
+      m.weeklyChapters = 0;
+      m.weeklyPassage = "";
+    });
+  }
+  
+  if (typeof saveData === 'function') saveData();
+  if (typeof renderAll === 'function') renderAll();
+  showToast("다음 주로 통독 주간이 변경되었으며, 데이터가 초기화되었습니다.");
+}
+
 function renderReadingTab() {
   const weeklyTotal = appData.members.reduce((sum, m) => sum + (m.weeklyChapters || 0), 0);
   const districtTotal = appData.members.reduce((sum, m) => sum + (m.totalAccumulated || 0), 0);
@@ -260,6 +300,11 @@ function renderReadingTab() {
 
   const totalEl = document.getElementById('reading-total-sum');
   if (totalEl) totalEl.innerText = `${districtTotal}장`;
+  
+  const dateRangeEl = document.getElementById('weekly-reading-date-range');
+  if (dateRangeEl) {
+    dateRangeEl.innerText = getWeeklyDateRangeStr();
+  }
 
   const listEl = document.getElementById('reading-member-list');
   if (listEl) {

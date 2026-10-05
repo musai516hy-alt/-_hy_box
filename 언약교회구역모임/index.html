@@ -370,9 +370,17 @@
       </div>
 
       <div class="card">
-        <div class="card-header">
-          <h2 class="card-title"><span>📊</span> 구역 식구별 이번 주 통독 & 연간 1독 달성률</h2>
-          <div style="display: flex; gap: 16px; font-size: 0.9rem;">
+        <div class="card-header" style="flex-wrap: wrap;">
+          <div style="width: 100%; display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 10px;">
+            <div>
+              <h2 class="card-title" style="margin: 0; line-height: 1.3;"><span>📊</span> 구역 식구별 이번 주 통독 & 연간 1독 달성률</h2>
+              <div id="weekly-reading-date-range" style="font-size: 0.85rem; font-weight: 700; color: var(--accent-gold); margin-top: 6px;">이번 주 통독 기간: -</div>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="resetWeeklyReading()" style="font-size: 0.75rem; white-space: nowrap;">
+              🔄 주간 초기화 (다음 주로)
+            </button>
+          </div>
+          <div style="display: flex; gap: 16px; font-size: 0.9rem; width: 100%;">
             <span>이번 주 합계: <strong style="color: var(--sage-green);" id="reading-weekly-sum">0장</strong></span>
             <span>연간 누적: <strong style="color: var(--primary);" id="reading-total-sum">0장</strong></span>
           </div>
